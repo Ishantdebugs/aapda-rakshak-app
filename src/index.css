@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-red: #DC2626;
+  --color-brand-orange: #EA580C;
+  --color-brand-amber: #D97706;
+  --color-brand-slate: #0F172A;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Oswald', system-ui, sans-serif;
+  
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Custom interactive states and utilities */
+.animate-radar {
+  animation: radar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-scan {
+  animation: scan-line 2.5s ease-in-out infinite;
+}
+
+.animate-ticker {
+  animation: ticker-scroll 25s linear infinite;
+}
+
+/* Chrome-styled high-stress dashboard scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+  border: 1px solid #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #dc2626;
+}
+
+/* Large tap targets for stressful/unstable settings */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Pulsing red ring for active SOS */
+.sos-pulse-ring {
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.85);
+  animation: sos-pulse-kf 1.6s infinite;
+}
+
+@keyframes sos-pulse-kf {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.85);
+  }
+  70% {
+    box-shadow: 0 0 0 30px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+/* Safe/Danger visual status glow */
+.safe-glow {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.danger-glow {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  border-color: rgba(239, 68, 68, 0.65);
+}
+
+/* Pulse indicator for live responder mapping */
+.responder-pulse {
+  animation: responder-pulse-kf 2s infinite;
+}
+
+@keyframes responder-pulse-kf {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
