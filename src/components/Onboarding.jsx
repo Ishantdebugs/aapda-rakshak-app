@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { translations } from "../utils/translations";
 import { ShieldAlert, Users, Award, Languages, Lock, Mail, Eye, EyeOff, User, Phone, Moon, Sun } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
+import { API_BASE_URL } from "../config";
 
 export default function Onboarding({ language, setLanguage, setRole, setUserProfile, onComplete }) {
   const t = translations[language];
@@ -115,7 +116,7 @@ export default function Onboarding({ language, setLanguage, setRole, setUserProf
         ? { name, email, phone, password, role: selectedRoleId }
         : { email, password };
 
-      const response = await fetch(`http://localhost:4000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

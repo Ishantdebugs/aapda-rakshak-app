@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: aapda-rakshak-backend
+    env: node
+    rootDir: backend-server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGIN
+        value: "*"
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/backend-server
+      sizeGB: 1
