@@ -27,8 +27,8 @@ export default function BarChart({
     <div className="flex flex-col gap-3">
       {title && (
         <div>
-          <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{title}</h4>
-          {subtitle && <p className="text-[10px] text-slate-500 mt-0.5">{subtitle}</p>}
+          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{title}</h4>
+          {subtitle && <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       )}
 
@@ -38,7 +38,7 @@ export default function BarChart({
           {[maxValue, Math.round(maxValue * 0.5), 0].map((v, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-[9px] font-mono text-slate-600 w-5 text-right shrink-0">{v}</span>
-              <div className="flex-1 border-t border-slate-800/60 border-dashed" />
+              <div className="flex-1 border-t border-slate-200 dark:border-slate-800/60 border-dashed" />
             </div>
           ))}
         </div>
@@ -86,7 +86,7 @@ export default function BarChart({
 
                 {/* X-axis label */}
                 <span
-                  className="text-[9px] text-slate-500 font-semibold text-center leading-tight mt-1 truncate w-full text-center px-0.5"
+                  className="text-[9px] text-slate-500 dark:text-slate-500 font-semibold text-center leading-tight mt-1 truncate w-full text-center px-0.5"
                   style={{ maxWidth: 56 }}
                 >
                   {d.label}

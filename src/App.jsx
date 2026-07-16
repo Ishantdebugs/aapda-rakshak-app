@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Onboarding from "./components/Onboarding";
 import Header from "./components/Header";
 import CitizenView from "./components/CitizenView";
@@ -27,7 +27,8 @@ export default function App() {
 
   // ── GLOBAL SOS MESSAGE QUEUE ────────────────────────────────────────────────
   // Shared across Citizen (sender), Responder (receiver), Admin (monitor)
-  const [sosMessages, setSosMessages] = useState([
+  // Persisted to localStorage so messages survive sign-out → sign-in role switches
+  const SOS_SEED = [
     {
       id: "sos-seed-1",
       citizenName: "Priya Kapoor",
@@ -73,7 +74,13 @@ export default function App() {
       status: "resolved",
       assignedResponderName: "Rescue Team Echo"
     }
-  ]);
+  ];
+  const [sosMessages, setSosMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem("ar_sosMessages");
+      return saved ? JSON.parse(saved) : SOS_SEED;
+    } catch { return SOS_SEED; }
+  });
 
   useEffect(() => {
     const center = userLocation || { lat: 28.6139, lng: 77.2090 };
@@ -118,6 +125,30 @@ export default function App() {
     setNearbyVolunteers(generated);
   }, [userLocation]);
 
+  // Ref to hold the active watchPosition ID so we can clear it
+  const watchIdRef = useRef(null);
+
+  // Shared success/error handlers for geolocation
+  const handlePositionSuccess = (position) => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    setUserLocation({ lat, lng });
+    setGpsAccuracy(position.coords.accuracy);
+    setLocationPermission("granted");
+    setLocationError(null);
+
+    // Keep the self-responder marker in sync with the live position
+    setResponders(prev =>
+      prev.map(r => r.id === "resp-self" ? { ...r, lat, lng, coords: `${lat.toFixed(4)}, ${lng.toFixed(4)}` } : r)
+    );
+  };
+
+  const handlePositionError = (error) => {
+    console.warn("Geolocation denied or unavailable:", error.message);
+    setLocationPermission("denied");
+    setLocationError(error.message);
+  };
+
   // Function to manually request or refresh GPS access
   const requestGpsAccess = () => {
     if (!navigator.geolocation) {
@@ -125,71 +156,61 @@ export default function App() {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setUserLocation({ lat, lng });
-        setGpsAccuracy(position.coords.accuracy);
-        setLocationPermission("granted");
-        setLocationError(null);
+    // Clear any existing watcher before starting a new one
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
 
-        // Update active self-responder's position to user's coordinates
-        setResponders(prev => 
-          prev.map(r => r.id === "resp-self" ? { ...r, lat, lng, coords: `${lat.toFixed(4)}, ${lng.toFixed(4)}` } : r)
-        );
-      },
-      (error) => {
-        console.warn("Geolocation denied or unavailable:", error.message);
-        setLocationPermission("denied");
-        setLocationError(error.message);
-      },
-      { enableHighAccuracy: true, timeout: 5000 }
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handlePositionSuccess,
+      handlePositionError,
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );
   };
 
-  // Geolocation API check on mount
+  // Start live GPS tracking on mount, clean up on unmount
   useEffect(() => {
-    if (navigator.geolocation) {
-      if (navigator.permissions && navigator.permissions.query) {
-        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-          setLocationPermission(result.state);
-          result.onchange = () => {
-            setLocationPermission(result.state);
-          };
-        }).catch(() => {
-          // query not supported, fallback below
-        });
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setUserLocation({ lat, lng });
-          setGpsAccuracy(position.coords.accuracy);
-          setLocationPermission("granted");
-          setLocationError(null);
-
-          // Update active self-responder's position to user's coordinates
-          setResponders(prev => 
-            prev.map(r => r.id === "resp-self" ? { ...r, lat, lng, coords: `${lat.toFixed(4)}, ${lng.toFixed(4)}` } : r)
-          );
-        },
-        (error) => {
-          console.warn("Geolocation denied or unavailable:", error.message);
-          setLocationPermission("denied");
-          setLocationError(error.message);
-        },
-        { enableHighAccuracy: true, timeout: 5000 }
-      );
-    } else {
+    if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser.");
+      return;
     }
-  }, []);
+
+    // Listen for permission state changes
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        setLocationPermission(result.state);
+        result.onchange = () => {
+          setLocationPermission(result.state);
+          // If user grants permission after being denied, restart the watcher
+          if (result.state === "granted") {
+            requestGpsAccess();
+          }
+        };
+      }).catch(() => {
+        // permissions.query not supported; ignore
+      });
+    }
+
+    // Start continuous live tracking via watchPosition
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handlePositionSuccess,
+      handlePositionError,
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+
+    // Cleanup: stop tracking when the app unmounts
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Global Incidents DB
-  const [incidents, setIncidents] = useState([
+  // Persisted to localStorage so citizen-reported incidents survive sign-out → sign-in
+  const INCIDENTS_SEED = [
     {
       id: 1,
       category: "flood",
@@ -229,7 +250,22 @@ export default function App() {
       lat: 28.6095,
       lng: 77.2201
     }
-  ]);
+  ];
+  const [incidents, setIncidents] = useState(() => {
+    try {
+      const saved = localStorage.getItem("ar_incidents");
+      return saved ? JSON.parse(saved) : INCIDENTS_SEED;
+    } catch { return INCIDENTS_SEED; }
+  });
+
+  // Persist incidents & sosMessages to localStorage on every change
+  useEffect(() => {
+    try { localStorage.setItem("ar_incidents", JSON.stringify(incidents)); } catch {}
+  }, [incidents]);
+
+  useEffect(() => {
+    try { localStorage.setItem("ar_sosMessages", JSON.stringify(sosMessages)); } catch {}
+  }, [sosMessages]);
 
   // Global Responders DB
   const [responders, setResponders] = useState([
@@ -412,7 +448,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
       {/* Accessible Navigation Header */}
       <Header
         language={language}
@@ -505,7 +541,7 @@ export default function App() {
       </main>
 
       {/* Technical Footer HUD bar */}
-      <footer className="bg-slate-950 py-3 px-4 md:px-8 border-t border-slate-900 text-center text-[10px] text-slate-500 font-mono flex flex-col md:flex-row justify-between items-center gap-2">
+      <footer className="bg-slate-50 dark:bg-slate-950 py-3 px-4 md:px-8 border-t border-slate-300 dark:border-slate-900 text-center text-[10px] text-slate-500 dark:text-slate-500 font-mono flex flex-col md:flex-row justify-between items-center gap-2">
         <span>© 2026 Aapada Rakshak Command Desk. All Rights Reserved.</span>
         <div className="flex gap-4">
           <span className="flex items-center gap-1">

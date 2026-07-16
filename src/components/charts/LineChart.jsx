@@ -57,8 +57,8 @@ export default function LineChart({
     <div className="flex flex-col gap-3" ref={containerRef}>
       {title && (
         <div>
-          <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{title}</h4>
-          {subtitle && <p className="text-[10px] text-slate-500 mt-0.5">{subtitle}</p>}
+          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{title}</h4>
+          {subtitle && <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       )}
 

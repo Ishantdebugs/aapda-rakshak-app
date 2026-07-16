@@ -88,17 +88,17 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-6">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col gap-6">
       {/* Title */}
-      <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
+      <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div className="p-2 bg-red-600/10 rounded-xl border border-red-500/20">
           <Cpu className="w-5 h-5 text-red-500" />
         </div>
         <div>
-          <h3 className="text-base font-extrabold text-white uppercase tracking-wider">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
             {t.aiTitle}
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {t.aiDesc}
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
         
         {/* Upload / Select sample zone */}
         <div className="space-y-4">
-          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
             {language === "hi" ? "चरण 1: मूल्यांकन के लिए तस्वीर चुनें" : "Step 1: Choose Damage Sample for Scan"}
           </label>
           
@@ -121,8 +121,8 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                   key={sample.id}
                   onClick={() => handleStartAnalysis(sample.id)}
                   disabled={loading}
-                  className={`text-left p-3.5 border rounded-xl flex items-center justify-between gap-4 hover:border-slate-600 hover:bg-slate-950/40 transition-all cursor-pointer touch-target ${
-                    selectedSample === sample.id ? "bg-slate-950/60 border-red-500/60" : "bg-slate-950/20 border-slate-800"
+                  className={`text-left p-3.5 border rounded-xl flex items-center justify-between gap-4 hover:border-slate-600 hover:bg-slate-50 dark:bg-slate-950/40 transition-all cursor-pointer touch-target ${
+                    selectedSample === sample.id ? "bg-slate-50 dark:bg-slate-950/60 border-red-500/60" : "bg-slate-50 dark:bg-slate-950/20 border-slate-200 dark:border-slate-800"
                   } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <div className="flex items-center gap-3">
@@ -130,8 +130,8 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                       <IconComp className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">{sample.title}</h4>
-                      <p className="text-[10px] text-slate-400">{sample.desc}</p>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{sample.title}</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{sample.desc}</p>
                     </div>
                   </div>
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border ${
@@ -146,19 +146,19 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
             })}
           </div>
 
-          <div className="border border-slate-800/80 border-dashed rounded-xl p-4 bg-slate-950/30 text-center relative overflow-hidden">
-            <Upload className="w-6 h-6 text-slate-500 mx-auto mb-2" />
-            <p className="text-[11px] text-slate-400 font-medium">
+          <div className="border border-slate-200 dark:border-slate-800/80 border-dashed rounded-xl p-4 bg-slate-50 dark:bg-slate-950/30 text-center relative overflow-hidden">
+            <Upload className="w-6 h-6 text-slate-500 dark:text-slate-500 mx-auto mb-2" />
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               {t.aiScanReady}
             </p>
-            <span className="text-[9px] px-2 py-0.5 mt-2 inline-block rounded bg-slate-900 text-slate-500 border border-slate-800">
+            <span className="text-[9px] px-2 py-0.5 mt-2 inline-block rounded bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500 border border-slate-200 dark:border-slate-800">
               {language === "hi" ? "फ़ाइल खींचें" : "Drag-Drop Enabled"}
             </span>
           </div>
         </div>
 
         {/* AI Diagnostics Console display */}
-        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col justify-between min-h-[220px] relative overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between min-h-[220px] relative overflow-hidden">
           
           {/* Active AI Scanning Radar Animation */}
           {loading && (
@@ -177,7 +177,7 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                 <p className="text-xs text-red-500 font-extrabold uppercase tracking-widest animate-pulse">
                   {t.aiScanning}
                 </p>
-                <p className="text-[10px] text-slate-400 font-mono italic max-w-[200px]">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono italic max-w-[200px]">
                   {simulationSteps[loadingStep] || "Finalizing triage vector..."}
                 </p>
               </div>
@@ -187,16 +187,16 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
           {/* Render Result Report */}
           {!loading && result && (
             <div className="space-y-4 animate-fadeIn">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <ShieldAlert className="w-4 h-4 text-red-500" />
-                <span className="font-display text-xs font-bold text-white uppercase tracking-wider">
+                <span className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   {t.aiReportTitle}
                 </span>
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center bg-slate-900/80 p-2 rounded border border-slate-800">
-                  <span className="text-[11px] text-slate-400">{t.aiSeverity}</span>
+                <div className="flex justify-between items-center bg-white dark:bg-slate-900/80 p-2 rounded border border-slate-200 dark:border-slate-800">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">{t.aiSeverity}</span>
                   <span className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded ${
                     result.severity === "high" ? "bg-red-950/95 text-red-400 border border-red-800" :
                     result.severity === "medium" ? "bg-amber-950/95 text-amber-400 border border-amber-800" :
@@ -207,8 +207,8 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
-                  <div className="bg-slate-900/60 p-2 rounded border border-slate-900">
-                    <span className="text-slate-500 block">{t.aiSafetyScore}</span>
+                  <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-300 dark:border-slate-900">
+                    <span className="text-slate-500 dark:text-slate-500 block">{t.aiSafetyScore}</span>
                     <span className={`text-sm font-extrabold font-mono ${
                       result.score < 40 ? "text-red-500" : result.score < 70 ? "text-amber-500" : "text-emerald-400"
                     }`}>
@@ -216,16 +216,16 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                     </span>
                   </div>
                   
-                  <div className="bg-slate-900/60 p-2 rounded border border-slate-900">
-                    <span className="text-slate-500 block">{t.aiConfidence}</span>
-                    <span className="text-sm font-extrabold font-mono text-slate-300">
+                  <div className="bg-white dark:bg-slate-900/60 p-2 rounded border border-slate-300 dark:border-slate-900">
+                    <span className="text-slate-500 dark:text-slate-500 block">{t.aiConfidence}</span>
+                    <span className="text-sm font-extrabold font-mono text-slate-700 dark:text-slate-300">
                       {result.confidence}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-slate-900 rounded border border-slate-800">
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase block mb-1">
+                <div className="p-2.5 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase block mb-1">
                     {t.aiPriority}:
                   </span>
                   <p className={`text-xs font-bold leading-normal ${
@@ -239,7 +239,7 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
                   </p>
                 </div>
 
-                <div className="p-2 bg-red-950/20 border border-red-950 rounded text-[10px] text-slate-300 leading-normal italic">
+                <div className="p-2 bg-red-950/20 border border-red-950 rounded text-[10px] text-slate-700 dark:text-slate-300 leading-normal italic">
                   <strong>Recommendation:</strong> {result.recommendation}
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
           {!loading && !result && (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
               <Cpu className="w-10 h-10 text-slate-600 mb-3" />
-              <p className="text-xs text-slate-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {language === "hi" 
                   ? "मूल्यांकन शुरू करने के लिए बाईं ओर सूची में से एक फोटो चुनें।" 
                   : "Select a damage profile from the list to trigger the AI triage analysis system."}
@@ -259,7 +259,7 @@ export default function AIDamageAssessor({ language, onTriageResult }) {
           )}
 
           {/* Console footer metadata info */}
-          <div className="text-[9px] text-slate-500 font-mono text-right mt-2 select-none border-t border-slate-900 pt-1.5">
+          <div className="text-[9px] text-slate-500 dark:text-slate-500 font-mono text-right mt-2 select-none border-t border-slate-300 dark:border-slate-900 pt-1.5">
             Model: AapadaNet-ResNet v2.1
           </div>
         </div>

@@ -3,7 +3,7 @@ import { translations } from "../utils/translations";
 import { 
   Plus, Minus, RefreshCw, MapPin, Shield, ShieldCheck, 
   Flame, Droplets, Activity, AlertTriangle, Navigation, WifiOff,
-  ChevronDown, ChevronUp, ExternalLink, Heart, User
+  ChevronDown, ChevronUp, ExternalLink, Heart, User, CloudRain, Wind, Thermometer
 } from "lucide-react";
 
 export default function InteractiveMap({ 
@@ -28,8 +28,9 @@ export default function InteractiveMap({
   // Map DOM Reference & Instances
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
-  const circlesRef = useRef([]);
+  const markersRef = useRef([]);         // static markers (incidents, camps, SOS, user, family)
+  const circlesRef = useRef([]);         // circles (safe zones, SOS radius, GPS accuracy)
+  const responderMarkersRef = useRef({}); // keyed by responder id for in-place setLatLng updates
   const routingPolylineRef = useRef(null);
   const hasCentredRef = useRef(false);
   const hasPagedToSOSRef = useRef(false);
@@ -59,6 +60,12 @@ export default function InteractiveMap({
 
   // Road routing coordinates state
   const [roadRouteCoordinates, setRoadRouteCoordinates] = useState([]);
+
+  // Weather States
+  const [showWeather, setShowWeather] = useState(false);
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   // SVG Fallback Dimensions
   const mapWidth = 800;
@@ -107,6 +114,40 @@ export default function InteractiveMap({
     document.head.appendChild(script);
   }, []);
 
+  // ─── Weather Data Fetching ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!showWeather) return;
+
+    const fetchWeather = async () => {
+      setWeatherLoading(true);
+      try {
+        // Use user location if available, otherwise default to map center or Delhi
+        let lat = 28.6139;
+        let lng = 77.2090;
+        
+        if (userLocation) {
+          lat = userLocation.lat;
+          lng = userLocation.lng;
+        } else if (mapInstanceRef.current) {
+          const center = mapInstanceRef.current.getCenter();
+          lat = center.lat;
+          lng = center.lng;
+        }
+
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum&timezone=auto&forecast_days=5`);
+        if (!res.ok) throw new Error("Failed to fetch weather");
+        const data = await res.json();
+        setWeatherData({ current: data.current, daily: data.daily });
+      } catch (err) {
+        console.error("Weather fetch error:", err);
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, [showWeather, userLocation]);
+
   // Safe zones registry
   const safeZones = [
     { id: "sz1", name: language === "hi" ? "सेंट्रल पार्क सेफ ज़ोन" : "Central Park Safe Zone", x: 250, y: 150, radius: 60, description: language === "hi" ? "बाढ़ मुक्त समतल क्षेत्र" : "Elevated flat terrain free of floods." },
@@ -119,7 +160,8 @@ export default function InteractiveMap({
     : incidents.find(inc => inc.id === assignedIncidentId);
   const activeUserResponder = responders.find(r => r.id === "resp-self" || r.id === 1);
 
-  // Leaflet Map updates lifecycle
+  // ─── Effect 1: Map Initialization ────────────────────────────────────────────
+  // Runs once when Leaflet loads. Creates the map instance and zoom control.
   useEffect(() => {
     if (offline || !leafletLoaded || !mapRef.current) {
       if (mapInstanceRef.current) {
@@ -128,52 +170,49 @@ export default function InteractiveMap({
       }
       return;
     }
+    if (mapInstanceRef.current) return; // already initialized
 
     const initialCenter = userLocation || { lat: 28.6139, lng: 77.2090 };
+    mapInstanceRef.current = window.L.map(mapRef.current, {
+      zoomControl: false,
+      attributionControl: false
+    }).setView([initialCenter.lat, initialCenter.lng], 13.5);
 
-    // Initialize Leaflet Map
-    if (!mapInstanceRef.current) {
-      mapInstanceRef.current = window.L.map(mapRef.current, {
-        zoomControl: false, // Customized position or controls
-        attributionControl: false
-      }).setView([initialCenter.lat, initialCenter.lng], 13.5);
-      
-      // Add custom zoom control to bottom left
-      window.L.control.zoom({
-        position: 'bottomleft'
-      }).addTo(mapInstanceRef.current);
-    }
+    window.L.control.zoom({ position: 'bottomleft' }).addTo(mapInstanceRef.current);
+  }, [leafletLoaded, offline]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── Effect 2: Tile Layer ─────────────────────────────────────────────────────
+  // Only re-runs when the map mode (dark / satellite / terrain) changes.
+  // Swapping tiles does NOT clear any markers.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !leafletLoaded || offline) return;
     const map = mapInstanceRef.current;
 
-    // Manage tile layers dynamically based on selected mapMode
     const tileUrls = {
       dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       terrain: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
     };
 
-    if (tileLayerRef.current) {
-      tileLayerRef.current.remove();
-    }
+    if (tileLayerRef.current) tileLayerRef.current.remove();
+    tileLayerRef.current = window.L.tileLayer(tileUrls[mapMode], { maxZoom: 19 }).addTo(map);
+  }, [mapMode, leafletLoaded, offline]);
 
-    tileLayerRef.current = window.L.tileLayer(tileUrls[mapMode], {
-      maxZoom: 19
-    }).addTo(map);
+  // ─── Effect 3: Static Markers & Circles ──────────────────────────────────────
+  // Re-renders incidents, camps, SOS, safe zones, user dot, family, volunteers.
+  // Responder markers are intentionally excluded here — managed separately below
+  // so their movement animation never triggers a full marker wipe.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !leafletLoaded || offline) return;
+    const map = mapInstanceRef.current;
 
-    // Clear old elements from the map
+    // Clear only static markers & circles (NOT responder markers)
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
-    
     circlesRef.current.forEach(c => c.remove());
     circlesRef.current = [];
 
-    if (routingPolylineRef.current) {
-      routingPolylineRef.current.remove();
-      routingPolylineRef.current = null;
-    }
-
-    // Render User Live Position Dot
+    // ── User Live Position Dot ──
     if (userLocation) {
       const userIcon = window.L.divIcon({
         className: 'user-location-pulse-wrapper',
@@ -188,61 +227,34 @@ export default function InteractiveMap({
         iconSize: [24, 24],
         iconAnchor: [12, 12]
       });
-
       const userMarker = window.L.marker([userLocation.lat, userLocation.lng], { icon: userIcon }).addTo(map);
-
-      // Accuracy radius circle
       const userAccuracy = window.L.circle([userLocation.lat, userLocation.lng], {
         radius: gpsAccuracy || 200,
-        color: '#3b82f6',
-        weight: 1,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.05
+        color: '#3b82f6', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.05
       }).addTo(map);
-
       markersRef.current.push(userMarker);
       circlesRef.current.push(userAccuracy);
     }
 
-    // Render Safe Zones (Circles)
+    // ── Safe Zones ──
     safeZones.forEach(sz => {
       const szLat = sz.id === "sz1" ? 28.6120 : 28.6280;
       const szLng = sz.id === "sz1" ? 77.2100 : 77.1950;
-
       const safeCircle = window.L.circle([szLat, szLng], {
         radius: sz.id === "sz1" ? 500 : 400,
-        color: '#22c55e',
-        weight: 1.5,
-        fillColor: '#22c55e',
-        fillOpacity: 0.08
+        color: '#22c55e', weight: 1.5, fillColor: '#22c55e', fillOpacity: 0.08
       }).addTo(map);
-
-      safeCircle.on("click", () => {
-        setSelectedEntity({
-          type: "safe_zone",
-          ...sz,
-          lat: szLat,
-          lng: szLng,
-          coords: `${szLat.toFixed(4)}, ${szLng.toFixed(4)}`
-        });
-      });
-
+      safeCircle.on("click", () => setSelectedEntity({ type: "safe_zone", ...sz, lat: szLat, lng: szLng, coords: `${szLat.toFixed(4)}, ${szLng.toFixed(4)}` }));
       circlesRef.current.push(safeCircle);
     });
 
-    // Render Active SOS Beacons
+    // ── Active SOS Beacon ──
     if (activeSOS && activeSOS.status !== "resolved") {
       const sosLat = activeSOS.lat || 28.6139;
       const sosLng = activeSOS.lng || 77.2090;
-
       const sosCircle = window.L.circle([sosLat, sosLng], {
-        radius: 600,
-        color: '#dc2626',
-        weight: 2.5,
-        fillColor: '#dc2626',
-        fillOpacity: 0.12
+        radius: 600, color: '#dc2626', weight: 2.5, fillColor: '#dc2626', fillOpacity: 0.12
       }).addTo(map);
-
       const sosIcon = window.L.divIcon({
         className: 'sos-location-pulse-wrapper',
         html: `
@@ -253,226 +265,194 @@ export default function InteractiveMap({
             </div>
           </div>
         `,
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        iconSize: [36, 36], iconAnchor: [18, 18]
       });
-
       const sosMarker = window.L.marker([sosLat, sosLng], { icon: sosIcon }).addTo(map);
-
-      sosMarker.on("click", () => {
-        setSelectedEntity({
-          type: "sos",
-          name: language === "hi" ? "नागरिक एसओएस संकट" : "Active SOS Distress Call",
-          description: t.sosDispatching,
-          lat: sosLat,
-          lng: sosLng,
-          coords: `${sosLat.toFixed(4)}, ${sosLng.toFixed(4)}`
-        });
-      });
-
+      sosMarker.on("click", () => setSelectedEntity({
+        type: "sos",
+        name: language === "hi" ? "नागरिक एसओएस संकट" : "Active SOS Distress Call",
+        description: t.sosDispatching, lat: sosLat, lng: sosLng,
+        coords: `${sosLat.toFixed(4)}, ${sosLng.toFixed(4)}`
+      }));
       circlesRef.current.push(sosCircle);
       markersRef.current.push(sosMarker);
-
-      // Pan to SOS only once on creation
       if (!hasPagedToSOSRef.current) {
         map.panTo([sosLat, sosLng]);
         hasPagedToSOSRef.current = true;
       }
     }
+    if (!activeSOS || activeSOS.status === "resolved") hasPagedToSOSRef.current = false;
 
-    if (!activeSOS || activeSOS.status === "resolved") {
-      hasPagedToSOSRef.current = false;
-    }
-
-    // Render Disaster Incident Markers
+    // ── Incident Markers ──
     filteredIncidents.forEach(inc => {
       const incLat = inc.lat || 28.6139;
       const incLng = inc.lng || 77.2090;
       const isHigh = inc.severity === "high";
-
       const incIcon = window.L.divIcon({
         className: 'custom-incident-icon',
         html: `<div style="background-color: ${isHigh ? '#dc2626' : '#ea580c'}; color: white; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); font-weight: bold;">⚠️</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        iconSize: [28, 28], iconAnchor: [14, 14]
       });
-
       const marker = window.L.marker([incLat, incLng], { icon: incIcon }).addTo(map);
-
-      marker.on("click", () => {
-        setSelectedEntity({
-          type: "incident",
-          ...inc,
-          lat: incLat,
-          lng: incLng,
-          coords: `${incLat.toFixed(4)}, ${incLng.toFixed(4)}`
-        });
-      });
-
+      marker.on("click", () => setSelectedEntity({ type: "incident", ...inc, lat: incLat, lng: incLng, coords: `${incLat.toFixed(4)}, ${incLng.toFixed(4)}` }));
       markersRef.current.push(marker);
     });
 
-    // Render Relief Camps
+    // ── Relief Camps ──
     camps.forEach(camp => {
       const campLat = camp.lat || 28.6120;
       const campLng = camp.lng || 77.2100;
       const isFull = (camp.bedsOccupied / camp.beds) >= 0.9;
-
       const campIcon = window.L.divIcon({
         className: 'custom-camp-icon',
         html: `<div style="background-color: ${isFull ? '#ea580c' : '#2563eb'}; color: white; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">⛺</div>`,
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        iconSize: [28, 28], iconAnchor: [14, 14]
       });
-
       const marker = window.L.marker([campLat, campLng], { icon: campIcon }).addTo(map);
-
-      marker.on("click", () => {
-        setSelectedEntity({
-          type: "camp",
-          ...camp,
-          lat: campLat,
-          lng: campLng,
-          coords: `${campLat.toFixed(4)}, ${campLng.toFixed(4)}`
-        });
-      });
-
+      marker.on("click", () => setSelectedEntity({ type: "camp", ...camp, lat: campLat, lng: campLng, coords: `${campLat.toFixed(4)}, ${campLng.toFixed(4)}` }));
       markersRef.current.push(marker);
     });
 
-    // Render Active Responders
+    // ── Family Members (Citizen only) ──
+    if (role === "citizen" && familyMembers && familyMembers.length > 0) {
+      familyMembers.forEach(member => {
+        if (member.relation === "Self" || !member.lat) return;
+        const isSafe = member.status === "safe";
+        const initial = member.name.charAt(0);
+        const famIcon = window.L.divIcon({
+          className: 'custom-family-icon',
+          html: `<div style="background-color: ${isSafe ? '#10b981' : '#f97316'}; color: white; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase;">${initial}</div>`,
+          iconSize: [28, 28], iconAnchor: [14, 14]
+        });
+        const marker = window.L.marker([member.lat, member.lng], { icon: famIcon }).addTo(map);
+        marker.on("click", () => setSelectedEntity({
+          type: "family_member",
+          name: `${member.name} (${member.relation})`,
+          description: `Status: ${member.status.toUpperCase()} (Updated at ${member.time})`,
+          coords: `${member.lat.toFixed(4)}, ${member.lng.toFixed(4)}`,
+          lat: member.lat, lng: member.lng
+        }));
+        markersRef.current.push(marker);
+      });
+    }
+
+    // ── Nearby Volunteers (Citizen only) ──
+    if (role === "citizen" && nearbyVolunteers && nearbyVolunteers.length > 0) {
+      nearbyVolunteers.forEach(vol => {
+        if (!vol.lat) return;
+        const volIcon = window.L.divIcon({
+          className: 'custom-volunteer-icon',
+          html: `<div style="background-color: #2563eb; color: white; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🙋🏽‍♂️</div>`,
+          iconSize: [26, 26], iconAnchor: [13, 13]
+        });
+        const marker = window.L.marker([vol.lat, vol.lng], { icon: volIcon }).addTo(map);
+        marker.on("click", () => setSelectedEntity({
+          type: "local_volunteer",
+          name: `${vol.name} (Volunteer)`,
+          description: `Services: ${vol.service}\nSupplies: ${vol.supplies}`,
+          phone: vol.phone,
+          coords: `${vol.lat.toFixed(4)}, ${vol.lng.toFixed(4)}`,
+          lat: vol.lat, lng: vol.lng
+        }));
+        markersRef.current.push(marker);
+      });
+    }
+
+  }, [leafletLoaded, offline, filteredIncidents, camps, activeSOS, filterType, filterSeverity, userLocation, gpsAccuracy, familyMembers, mapMode, nearbyVolunteers, role]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Effect 4: Responder Markers — in-place position updates ─────────────────
+  // This effect NEVER removes/re-creates markers. Instead it:
+  //  • Creates a marker the first time a responder is seen (keyed by id)
+  //  • Calls setLatLng() to smoothly move the existing marker when position changes
+  // This is what eliminates the flicker during routing animation.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !leafletLoaded || offline) return;
+    const map = mapInstanceRef.current;
+    const currentIds = new Set(responders.map(r => String(r.id)));
+
+    // Remove markers for responders that no longer exist
+    Object.keys(responderMarkersRef.current).forEach(id => {
+      if (!currentIds.has(id)) {
+        responderMarkersRef.current[id].remove();
+        delete responderMarkersRef.current[id];
+      }
+    });
+
     responders.forEach(resp => {
       const respLat = resp.lat || 28.6110;
       const respLng = resp.lng || 77.2012;
       const isBusy = resp.status === "busy";
+      const idKey = String(resp.id);
 
-      const respIcon = window.L.divIcon({
-        className: 'custom-resp-icon',
-        html: `<div style="background-color: ${isBusy ? '#3b82f6' : '#10b981'}; color: white; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚒</div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
-      });
-
-      const marker = window.L.marker([respLat, respLng], { icon: respIcon }).addTo(map);
-
-      marker.on("click", () => {
-        setSelectedEntity({
-          type: "responder",
-          ...resp,
-          lat: respLat,
-          lng: respLng,
-          coords: `${respLat.toFixed(4)}, ${respLng.toFixed(4)}`
+      if (responderMarkersRef.current[idKey]) {
+        // ✅ Marker already exists — just move it smoothly, no flicker
+        responderMarkersRef.current[idKey].setLatLng([respLat, respLng]);
+      } else {
+        // First time: create and store the marker
+        const respIcon = window.L.divIcon({
+          className: 'custom-resp-icon',
+          html: `<div style="background-color: ${isBusy ? '#3b82f6' : '#10b981'}; color: white; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🚒</div>`,
+          iconSize: [26, 26], iconAnchor: [13, 13]
         });
-      });
-
-      markersRef.current.push(marker);
+        const marker = window.L.marker([respLat, respLng], { icon: respIcon }).addTo(map);
+        marker.on("click", () => setSelectedEntity({
+          type: "responder", ...resp,
+          lat: respLat, lng: respLng,
+          coords: `${respLat.toFixed(4)}, ${respLng.toFixed(4)}`
+        }));
+        responderMarkersRef.current[idKey] = marker;
+      }
     });
+  }, [leafletLoaded, offline, responders]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Effect 5: Routing Polyline ───────────────────────────────────────────────
+  // Only redraws the route line when coordinates or assignment changes.
+  // All other marker updates are fully independent of this.
+  useEffect(() => {
+    if (!mapInstanceRef.current || !leafletLoaded || offline) return;
+    const map = mapInstanceRef.current;
+
+    // Always remove the old polyline first
+    if (routingPolylineRef.current) {
+      routingPolylineRef.current.remove();
+      routingPolylineRef.current = null;
+    }
 
     if (!assignedIncidentId) {
       hasFittedBoundsRef.current = null;
+      return;
     }
 
-    // Draw routing Polyline in Responder mode
+    // Responder routing to incident
     if (role === "responder" && assignedIncident && activeUserResponder) {
       const path = roadRouteCoordinates.length > 0
         ? roadRouteCoordinates
         : [[activeUserResponder.lat, activeUserResponder.lng], [assignedIncident.lat, assignedIncident.lng]];
 
       const polyline = window.L.polyline(path, {
-        color: '#3b82f6',
-        weight: 5,
-        opacity: 0.85,
-        dashArray: '10, 10'
+        color: '#3b82f6', weight: 5, opacity: 0.85, dashArray: '10, 10'
       }).addTo(map);
-
       routingPolylineRef.current = polyline;
 
-      // Fit bounds only once per new incident assignment
+      // Fit bounds only once per new assignment
       if (hasFittedBoundsRef.current !== assignedIncident.id) {
         map.fitBounds(polyline.getBounds(), { padding: [50, 50] });
         hasFittedBoundsRef.current = assignedIncident.id;
       }
     }
 
-    // Draw routing line in Citizen SOS dispatched mode
+    // Citizen SOS dispatched routing line
     if (role === "citizen" && activeSOS && activeSOS.status === "dispatched" && activeUserResponder) {
       const path = roadRouteCoordinates.length > 0
         ? roadRouteCoordinates
         : [[activeUserResponder.lat, activeUserResponder.lng], [activeSOS.lat, activeSOS.lng]];
 
       const polyline = window.L.polyline(path, {
-        color: '#10b981',
-        weight: 5,
-        opacity: 0.85,
-        dashArray: '10, 10'
+        color: '#10b981', weight: 5, opacity: 0.85, dashArray: '10, 10'
       }).addTo(map);
-
       routingPolylineRef.current = polyline;
     }
-
-    // Render Family Members (only for Citizen role map)
-    if (role === "citizen" && familyMembers && familyMembers.length > 0) {
-      familyMembers.forEach(member => {
-        if (member.relation === "Self" || !member.lat) return; // Skip self (already drawn)
-
-        const isSafe = member.status === "safe";
-        const initial = member.name.charAt(0);
-
-        const famIcon = window.L.divIcon({
-          className: 'custom-family-icon',
-          html: `<div style="background-color: ${isSafe ? '#10b981' : '#f97316'}; color: white; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.4); text-transform: uppercase;">${initial}</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
-        });
-
-        const marker = window.L.marker([member.lat, member.lng], { icon: famIcon }).addTo(map);
-
-        marker.on("click", () => {
-          setSelectedEntity({
-            type: "family_member",
-            name: `${member.name} (${member.relation})`,
-            description: `Status: ${member.status.toUpperCase()} (Updated at ${member.time})`,
-            coords: `${member.lat.toFixed(4)}, ${member.lng.toFixed(4)}`,
-            lat: member.lat,
-            lng: member.lng
-          });
-        });
-
-        markersRef.current.push(marker);
-      });
-    }
-
-    // Render Nearby Volunteers (only for Citizen view map)
-    if (role === "citizen" && nearbyVolunteers && nearbyVolunteers.length > 0) {
-      nearbyVolunteers.forEach(vol => {
-        if (!vol.lat) return;
-
-        const volIcon = window.L.divIcon({
-          className: 'custom-volunteer-icon',
-          html: `<div style="background-color: #2563eb; color: white; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">🙋🏽‍♂️</div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
-        });
-
-        const marker = window.L.marker([vol.lat, vol.lng], { icon: volIcon }).addTo(map);
-
-        marker.on("click", () => {
-          setSelectedEntity({
-            type: "local_volunteer",
-            name: `${vol.name} (Volunteer)`,
-            description: `Services: ${vol.service}\nSupplies: ${vol.supplies}`,
-            phone: vol.phone,
-            coords: `${vol.lat.toFixed(4)}, ${vol.lng.toFixed(4)}`,
-            lat: vol.lat,
-            lng: vol.lng
-          });
-        });
-
-        markersRef.current.push(marker);
-      });
-    }
-
-  }, [leafletLoaded, offline, incidents, responders, camps, activeSOS, filterType, filterSeverity, userLocation, gpsAccuracy, familyMembers, roadRouteCoordinates, mapMode, nearbyVolunteers]);
+  }, [leafletLoaded, offline, assignedIncidentId, roadRouteCoordinates, role, activeSOS]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Smoothly center map when Geolocation loads first position
   useEffect(() => {
@@ -539,7 +519,7 @@ export default function InteractiveMap({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col relative shadow-xl">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden flex flex-col relative shadow-xl">
       {/* Dynamic Keyframes Animation Injection */}
       <style>{`
         @keyframes ping {
@@ -549,10 +529,10 @@ export default function InteractiveMap({
       `}</style>
 
       {/* Map Control Header */}
-      <div className="bg-slate-950/80 px-4 py-3 border-b border-slate-800 flex flex-wrap justify-between items-center gap-3">
+      <div className="bg-slate-50 dark:bg-slate-950/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap justify-between items-center gap-3">
         <div className="flex items-center gap-2">
           <Navigation className="w-4 h-4 text-red-500 animate-pulse" />
-          <span className="text-sm font-extrabold text-white">{t.mapTitle}</span>
+          <span className="text-sm font-extrabold text-slate-900 dark:text-white">{t.mapTitle}</span>
           {offline ? (
             <span className="flex items-center gap-1 text-[9px] px-2 py-0.5 rounded bg-red-950 text-red-400 font-bold border border-red-900/50 uppercase">
               <WifiOff className="w-2.5 h-2.5" />
@@ -570,7 +550,7 @@ export default function InteractiveMap({
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="bg-slate-900 text-xs text-slate-300 px-2 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
+            className="bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
           >
             <option value="all">{t.mapFilterAll}</option>
             <option value="flood">{t.mapFilterFloods}</option>
@@ -582,7 +562,7 @@ export default function InteractiveMap({
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
-            className="bg-slate-900 text-xs text-slate-300 px-2 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
+            className="bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
           >
             <option value="all">{t.mapFilterSeverityAll}</option>
             <option value="high">{language === "hi" ? "गंभीर (High)" : "High Severity Only"}</option>
@@ -590,36 +570,46 @@ export default function InteractiveMap({
 
           {/* Map Mode Selector */}
           {!offline && (
-            <select
-              value={mapMode}
-              onChange={(e) => setMapMode(e.target.value)}
-              className="bg-slate-900 text-xs text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target font-bold"
-            >
-              <option value="dark">🌐 {language === "hi" ? "डार्क मोड" : "Tactical Dark"}</option>
-              <option value="satellite">📡 {language === "hi" ? "सैटेलाइट" : "Satellite view"}</option>
-              <option value="terrain">⛰️ {language === "hi" ? "टेरेन" : "Terrain Map"}</option>
-            </select>
+            <>
+              <select
+                value={mapMode}
+                onChange={(e) => setMapMode(e.target.value)}
+                className="bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-red-500 cursor-pointer touch-target font-bold"
+              >
+                <option value="dark">🌐 {language === "hi" ? "डार्क मोड" : "Tactical Dark"}</option>
+                <option value="satellite">📡 {language === "hi" ? "सैटेलाइट" : "Satellite view"}</option>
+                <option value="terrain">⛰️ {language === "hi" ? "टेरेन" : "Terrain Map"}</option>
+              </select>
+
+              <button
+                onClick={() => setShowWeather(!showWeather)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer touch-target ${showWeather ? "bg-blue-600/20 border-blue-500 text-blue-400 shadow-md shadow-blue-500/20" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300"}`}
+              >
+                <CloudRain className="w-3.5 h-3.5" />
+                {language === "hi" ? "मौसम" : "Weather"}
+              </button>
+            </>
           )}
 
           {offline && (
             <>
-              <div className="h-6 w-[1px] bg-slate-800 mx-1"></div>
+              <div className="h-6 w-[1px] bg-slate-100 dark:bg-slate-800 mx-1"></div>
               {/* Zoom Buttons (Only for SVG offline tactical map) */}
-              <div className="flex items-center bg-slate-900 rounded-lg border border-slate-800 p-0.5">
+              <div className="flex items-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-0.5">
                 <button
                   onClick={handleZoomOut}
                   title="Zoom Out"
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors touch-target cursor-pointer"
+                  className="p-1 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded transition-colors touch-target cursor-pointer"
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-[10px] text-slate-500 font-mono w-8 text-center">
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 font-mono w-8 text-center">
                   {Math.round(zoom * 100)}%
                 </span>
                 <button
                   onClick={handleZoomIn}
                   title="Zoom In"
-                  className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded transition-colors touch-target cursor-pointer"
+                  className="p-1 hover:bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white rounded transition-colors touch-target cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -628,7 +618,7 @@ export default function InteractiveMap({
               <button
                 onClick={handleResetMap}
                 title="Reset Map View"
-                className="p-1.5 bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 rounded-lg transition-all cursor-pointer touch-target"
+                className="p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:border-slate-300 dark:border-slate-700 rounded-lg transition-all cursor-pointer touch-target"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
@@ -638,7 +628,7 @@ export default function InteractiveMap({
       </div>
 
       {/* Main Canvas rendering container */}
-      <div className="flex-1 bg-slate-950 relative overflow-hidden select-none min-h-[350px] md:min-h-[420px]">
+      <div className="flex-1 bg-slate-50 dark:bg-slate-950 relative overflow-hidden select-none min-h-[350px] md:min-h-[420px]">
         
         {/* ONLINE STATE: LIVE OPENSTREETMAPS LEAFLET */}
         {!offline && leafletLoaded && (
@@ -658,7 +648,7 @@ export default function InteractiveMap({
                   }
                 }}
                 title={language === "hi" ? "मेरी स्थिति पर केंद्रित करें" : "Recenter on My Location"}
-                className="absolute top-4 right-4 bg-slate-950/95 border border-slate-800 p-2.5 rounded-xl text-blue-450 hover:text-white transition-all cursor-pointer shadow-lg z-10 touch-target hover:border-blue-500 flex items-center justify-center"
+                className="absolute top-4 right-4 bg-slate-50 dark:bg-slate-950/95 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-blue-450 hover:text-slate-900 dark:text-white transition-all cursor-pointer shadow-lg z-10 touch-target hover:border-blue-500 flex items-center justify-center"
               >
                 <Navigation className="w-5 h-5" />
               </button>
@@ -666,12 +656,12 @@ export default function InteractiveMap({
 
             {/* GPS Signal Status Portal Widget */}
             <div className="absolute top-16 right-4 z-10">
-              <div className="bg-slate-950/95 border border-slate-800 rounded-xl shadow-lg transition-all overflow-hidden max-w-[260px] w-[200px] md:w-[240px]">
+              <div className="bg-slate-50 dark:bg-slate-950/95 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg transition-all overflow-hidden max-w-[260px] w-[200px] md:w-[240px]">
                 
                 {/* Header Pill */}
                 <button
                   onClick={() => setPortalOpen(!portalOpen)}
-                  className="flex items-center gap-2 px-3 py-2 text-[10px] font-extrabold text-slate-300 hover:text-white cursor-pointer w-full text-left focus:outline-none"
+                  className="flex items-center gap-2 px-3 py-2 text-[10px] font-extrabold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white cursor-pointer w-full text-left focus:outline-none"
                 >
                   <span className={`w-2 h-2 rounded-full ${
                     locationPermission === "granted" ? "bg-emerald-500 animate-pulse" :
@@ -681,16 +671,16 @@ export default function InteractiveMap({
                     GPS: {locationPermission === "granted" ? "LIVE LOCK" : locationPermission.toUpperCase()}
                   </span>
                   {portalOpen ? (
-                    <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                    <ChevronUp className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
                   ) : (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
                   )}
                 </button>
 
                 {/* Collapsible Details Body */}
                 {portalOpen && (
-                  <div className="p-3 border-t border-slate-900 bg-slate-950/50 space-y-2 text-[10px] text-slate-450 font-mono">
-                    <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                  <div className="p-3 border-t border-slate-300 dark:border-slate-900 bg-slate-50 dark:bg-slate-950/50 space-y-2 text-[10px] text-slate-500 dark:text-slate-450 font-mono">
+                    <div className="flex justify-between border-b border-slate-300 dark:border-slate-900/60 pb-1">
                       <span>Signal Lock:</span>
                       <span className={locationPermission === "granted" ? "text-emerald-400" : "text-red-400"}>
                         {locationPermission === "granted" ? "STABLE" : "STANDBY"}
@@ -698,23 +688,23 @@ export default function InteractiveMap({
                     </div>
                     {userLocation ? (
                       <>
-                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                        <div className="flex justify-between border-b border-slate-300 dark:border-slate-900/60 pb-1">
                           <span>Latitude:</span>
-                          <span className="text-white">{userLocation.lat.toFixed(5)}</span>
+                          <span className="text-slate-900 dark:text-white">{userLocation.lat.toFixed(5)}</span>
                         </div>
-                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                        <div className="flex justify-between border-b border-slate-300 dark:border-slate-900/60 pb-1">
                           <span>Longitude:</span>
-                          <span className="text-white">{userLocation.lng.toFixed(5)}</span>
+                          <span className="text-slate-900 dark:text-white">{userLocation.lng.toFixed(5)}</span>
                         </div>
-                        <div className="flex justify-between border-b border-slate-900/60 pb-1">
+                        <div className="flex justify-between border-b border-slate-300 dark:border-slate-900/60 pb-1">
                           <span>Accuracy:</span>
-                          <span className="text-white">±{gpsAccuracy ? gpsAccuracy.toFixed(1) : "15"}m</span>
+                          <span className="text-slate-900 dark:text-white">±{gpsAccuracy ? gpsAccuracy.toFixed(1) : "15"}m</span>
                         </div>
                       </>
                     ) : (
                       <div className="text-red-400 leading-normal mb-1">
                         {locationPermission === "denied" ? (
-                          <div className="space-y-1 text-slate-300 font-sans">
+                          <div className="space-y-1 text-slate-700 dark:text-slate-300 font-sans">
                             <p className="text-red-400 font-bold font-mono text-[9px] uppercase">Permission Denied</p>
                             <p className="leading-relaxed text-[9px]">Click the padlock/settings icon in your browser address bar next to the URL and change Location to "Allow" to restore live tracking.</p>
                           </div>
@@ -734,14 +724,74 @@ export default function InteractiveMap({
                 )}
               </div>
             </div>
+
+            {/* Weather Overlay Portal */}
+            {showWeather && (
+              <div className="absolute top-16 left-4 z-10 animate-fadeIn">
+                <div className="bg-slate-50 dark:bg-slate-950/90 backdrop-blur-md border border-blue-900/50 rounded-xl shadow-2xl transition-all overflow-hidden p-3 w-[180px]">
+                  <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2 mb-2">
+                    <CloudRain className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="text-[10px] font-extrabold text-blue-100 uppercase tracking-wider font-display">
+                      {language === "hi" ? "लाइव मौसम" : "Live Weather"}
+                    </span>
+                  </div>
+                  {weatherLoading ? (
+                    <div className="flex justify-center p-3">
+                      <div className="w-4 h-4 border-2 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+                    </div>
+                  ) : weatherData ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><Thermometer className="w-3 h-3 text-red-400" /> Temp:</span>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm">{weatherData.current.temperature_2m}°C</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white dark:bg-slate-900/50 p-1 rounded">
+                          <span className="flex items-center gap-1.5"><Wind className="w-3 h-3 text-emerald-400" /> Wind:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{weatherData.current.wind_speed_10m} km/h</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5"><Droplets className="w-3 h-3 text-blue-400" /> Precip:</span>
+                          <span className="font-bold text-blue-200">{weatherData.current.precipitation} mm</span>
+                        </div>
+                      </div>
+
+                      {/* 5-Day Forecast */}
+                      {weatherData.daily && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800/80">
+                          <span className="text-[9px] font-extrabold text-slate-500 dark:text-slate-500 uppercase tracking-wider mb-2 block">
+                            {language === "hi" ? "5-दिन का पूर्वानुमान" : "5-Day Forecast"}
+                          </span>
+                          <div className="space-y-1.5">
+                            {weatherData.daily.time.slice(0, 5).map((time, index) => {
+                              const date = new Date(time);
+                              const dayName = date.toLocaleDateString(language === "hi" ? "hi-IN" : "en-US", { weekday: "short" });
+                              return (
+                                <div key={time} className="flex justify-between items-center text-[9px] font-mono">
+                                  <span className="text-slate-500 dark:text-slate-400 w-8">{index === 0 ? (language === "hi" ? "आज" : "Tdy") : dayName}</span>
+                                  <span className="text-slate-900 dark:text-white font-bold">{Math.round(weatherData.daily.temperature_2m_max[index])}° / {Math.round(weatherData.daily.temperature_2m_min[index])}°</span>
+                                  <span className="text-blue-400 text-right w-12">{weatherData.daily.precipitation_sum[index]}mm</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-red-400 text-[9px]">Data unavailable</div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 
         {/* LOADING OPENSTREETMAP COVER SCREEN */}
         {!offline && !leafletLoaded && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950 p-4">
-            <div className="w-10 h-10 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin mb-3"></div>
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+            <div className="w-10 h-10 border-4 border-slate-200 dark:border-slate-800 border-t-blue-500 rounded-full animate-spin mb-3"></div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">
               {language === "hi" ? "ओपनस्ट्रीटमैप लोड हो रहा है..." : "Initializing OpenStreetMap Engine..."}
             </p>
           </div>
@@ -750,7 +800,7 @@ export default function InteractiveMap({
         {/* OFFLINE STATE: MOCK TACTICAL SVG VIEWPORT FALLBACK */}
         {offline && (
           <div 
-            className="w-full h-full absolute inset-0 z-0 flex items-center justify-center cursor-grab active:cursor-grabbing bg-slate-950"
+            className="w-full h-full absolute inset-0 z-0 flex items-center justify-center cursor-grab active:cursor-grabbing bg-slate-50 dark:bg-slate-950"
             onMouseDown={(e) => {
               const startX = e.clientX - panX;
               const startY = e.clientY - panY;
@@ -844,7 +894,7 @@ export default function InteractiveMap({
                       fill="#ef4444"
                       fontSize="9"
                       fontWeight="bold"
-                      className="font-mono bg-slate-950"
+                      className="font-mono bg-slate-50 dark:bg-slate-950"
                     >
                       {inc.title}
                     </text>
@@ -962,40 +1012,56 @@ export default function InteractiveMap({
             </svg>
 
             {/* Offline Grid Navigation controls HUD */}
-            <div className="absolute bottom-3 left-3 bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-lg text-[9px] text-slate-500 font-mono pointer-events-none select-none z-10">
+            <div className="absolute bottom-3 left-3 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-lg text-[9px] text-slate-500 dark:text-slate-500 font-mono pointer-events-none select-none z-10">
               PAN: DRAG | ZOOM: CONTROLS
             </div>
           </div>
         )}
 
         {/* Map Legend Overlay */}
-        <div className="absolute bottom-3 left-3 bg-slate-950/90 border border-slate-800 px-3 py-2 rounded-xl text-[10px] space-y-1.5 backdrop-blur-md max-w-[200px] pointer-events-none z-10 shadow-lg">
-          <p className="font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1 font-display">
-            {language === "hi" ? "मानचित्र संकेत" : "TACTICAL LEGEND"}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-600 block"></span>
-            <span className="text-slate-300">{t.mapLegendIncident}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block"></span>
-            <span className="text-slate-300">{t.mapLegendSafe}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded bg-blue-600 block"></span>
-            <span className="text-slate-300">{t.mapLegendCamp}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-450 block"></span>
-            <span className="text-slate-300">{t.mapLegendResponder}</span>
+        <div className="absolute bottom-3 left-3 z-10">
+          <div className="bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg transition-all overflow-hidden max-w-[200px] backdrop-blur-md">
+            <button
+              onClick={() => setLegendOpen(!legendOpen)}
+              className="flex items-center justify-between w-full px-3 py-2 text-[10px] font-extrabold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white cursor-pointer focus:outline-none pointer-events-auto"
+            >
+              <span className="uppercase tracking-wider font-display">
+                {language === "hi" ? "मानचित्र संकेत" : "TACTICAL LEGEND"}
+              </span>
+              {legendOpen ? (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
+              ) : (
+                <ChevronUp className="w-3.5 h-3.5 text-slate-500 dark:text-slate-500" />
+              )}
+            </button>
+            {legendOpen && (
+              <div className="px-3 pb-3 space-y-1.5 border-t border-slate-200 dark:border-slate-800/80 pt-2 pointer-events-auto text-[10px]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-600 block flex-shrink-0"></span>
+                  <span className="text-slate-700 dark:text-slate-300 leading-tight">{t.mapLegendIncident}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 block flex-shrink-0"></span>
+                  <span className="text-slate-700 dark:text-slate-300 leading-tight">{t.mapLegendSafe}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded bg-blue-600 block flex-shrink-0"></span>
+                  <span className="text-slate-700 dark:text-slate-300 leading-tight">{t.mapLegendCamp}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-450 block flex-shrink-0"></span>
+                  <span className="text-slate-700 dark:text-slate-300 leading-tight">{t.mapLegendResponder}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Selected Entity HUD Inspector overlay card */}
         {selectedEntity && (
-          <div className="absolute bottom-3 right-3 bg-slate-950/95 border border-red-500/35 p-4 rounded-xl text-xs backdrop-blur-md max-w-sm w-[260px] md:w-[320px] shadow-2xl animate-fadeIn z-15">
-            <div className="flex justify-between items-start mb-2 border-b border-slate-800 pb-1.5">
-              <span className="font-extrabold text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 font-display">
+          <div className="absolute bottom-3 right-3 bg-slate-50 dark:bg-slate-950/95 border border-red-500/35 p-4 rounded-xl text-xs backdrop-blur-md max-w-sm w-[260px] md:w-[320px] shadow-2xl animate-fadeIn z-15">
+            <div className="flex justify-between items-start mb-2 border-b border-slate-200 dark:border-slate-800 pb-1.5">
+              <span className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5 font-display">
                 {selectedEntity.type === "incident" && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
                 {selectedEntity.type === "safe_zone" && <Shield className="w-3.5 h-3.5 text-emerald-500" />}
                 {selectedEntity.type === "camp" && <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />}
@@ -1007,103 +1073,103 @@ export default function InteractiveMap({
               </span>
               <button
                 onClick={() => setSelectedEntity(null)}
-                className="text-slate-500 hover:text-white px-1.5 py-0.5 rounded hover:bg-slate-900 font-bold transition-all cursor-pointer"
+                className="text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:text-white px-1.5 py-0.5 rounded hover:bg-white dark:bg-slate-900 font-bold transition-all cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-sm font-bold text-white leading-tight">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
                 {selectedEntity.title || selectedEntity.name}
               </h4>
               
-              <p className="text-slate-400 text-[11px] leading-relaxed">
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
                 {selectedEntity.description}
               </p>
 
               {selectedEntity.type === "incident" && (
-                <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                <div className="grid grid-cols-2 gap-2 text-[10px] bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800/80">
                   <div>
-                    <span className="text-slate-500 block">Severity:</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Severity:</span>
                     <span className={`font-bold uppercase ${selectedEntity.severity === "high" ? "text-red-500" : "text-amber-500"}`}>
                       {selectedEntity.severity}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Status:</span>
-                    <span className="font-bold text-slate-300 capitalize">{selectedEntity.status}</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Status:</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">{selectedEntity.status}</span>
                   </div>
                 </div>
               )}
 
               {selectedEntity.photo && (
-                <div className="mt-2 rounded-lg overflow-hidden border border-slate-855 max-h-[130px] flex bg-slate-900 shadow-inner">
+                <div className="mt-2 rounded-lg overflow-hidden border border-slate-855 max-h-[130px] flex bg-white dark:bg-slate-900 shadow-inner">
                   <img src={selectedEntity.photo} alt="Incident evidence" className="object-cover w-full h-[130px]" />
                 </div>
               )}
 
               {selectedEntity.type === "camp" && (
-                <div className="space-y-2 text-[10px] bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                <div className="space-y-2 text-[10px] bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800/80">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-500">{t.adminCampsBeds}:</span>
-                    <span className="font-mono font-bold text-slate-200">
+                    <span className="text-slate-500 dark:text-slate-500">{t.adminCampsBeds}:</span>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                       {selectedEntity.bedsOccupied} / {selectedEntity.beds}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                     <div 
                       className={`h-1.5 rounded-full ${selectedEntity.bedsOccupied / selectedEntity.beds >= 0.9 ? "bg-red-600" : "bg-blue-600"}`} 
                       style={{ width: `${(selectedEntity.bedsOccupied / selectedEntity.beds) * 100}%` }}
                     ></div>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Water Supply:</span>
+                    <span className="text-slate-500 dark:text-slate-500">Water Supply:</span>
                     <span className="font-bold text-emerald-450">92%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Food Rations:</span>
+                    <span className="text-slate-500 dark:text-slate-500">Food Rations:</span>
                     <span className="font-bold text-amber-500">45%</span>
                   </div>
                 </div>
               )}
 
               {selectedEntity.type === "responder" && (
-                <div className="grid grid-cols-2 gap-2 text-[10px] bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
+                <div className="grid grid-cols-2 gap-2 text-[10px] bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-800/80">
                   <div>
-                    <span className="text-slate-500 block">Duty Status:</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Duty Status:</span>
                     <span className={`font-bold capitalize ${selectedEntity.status === "available" ? "text-emerald-400" : "text-blue-400"}`}>
                       {selectedEntity.status}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Equipment:</span>
-                    <span className="font-bold text-slate-300">{selectedEntity.type || "First Aid / Radio"}</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Equipment:</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{selectedEntity.type || "First Aid / Radio"}</span>
                   </div>
                 </div>
               )}
 
               {selectedEntity.type === "local_volunteer" && (
-                <div className="space-y-1.5 text-[10px] bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
-                  <div className="flex justify-between items-center pb-1.5 border-b border-slate-800/80">
-                    <span className="text-slate-500 font-medium">Contact Phone:</span>
+                <div className="space-y-1.5 text-[10px] bg-white dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/80">
+                  <div className="flex justify-between items-center pb-1.5 border-b border-slate-200 dark:border-slate-800/80">
+                    <span className="text-slate-500 dark:text-slate-500 font-medium">Contact Phone:</span>
                     <a href={`tel:${selectedEntity.phone}`} className="font-extrabold text-emerald-400 hover:text-emerald-355 transition-colors font-mono">
                       {selectedEntity.phone}
                     </a>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Services:</span>
-                    <span className="font-bold text-slate-200">{selectedEntity.description.split('\n')[0].replace('Services: ', '')}</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Services:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedEntity.description.split('\n')[0].replace('Services: ', '')}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Supplies Offered:</span>
+                    <span className="text-slate-500 dark:text-slate-500 block">Supplies Offered:</span>
                     <span className="font-bold text-slate-350">{selectedEntity.description.split('\n')[1]?.replace('Supplies: ', '') || 'None'}</span>
                   </div>
                 </div>
               )}
 
               {selectedEntity.coords && (
-                <div className="text-[10px] text-slate-500 font-mono mt-1 text-right">
+                <div className="text-[10px] text-slate-500 dark:text-slate-500 font-mono mt-1 text-right">
                   GPS: {selectedEntity.coords}
                 </div>
               )}

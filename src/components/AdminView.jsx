@@ -53,10 +53,10 @@ const NEARBY_NOTIFICATIONS = [
 // Severity badge helper
 function SeverityBadge({ severity }) {
   const map = {
-    critical: "bg-red-700 text-white border-red-600",
+    critical: "bg-red-700 text-slate-900 dark:text-white border-red-600",
     high: "bg-orange-900/70 text-orange-400 border-orange-800",
     medium: "bg-amber-900/70 text-amber-400 border-amber-800",
-    low: "bg-slate-800 text-slate-400 border-slate-700",
+    low: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700",
   };
   return (
     <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded border ${map[severity] || map.medium}`}>
@@ -82,7 +82,7 @@ function StatCard({ icon: Icon, count, label, subtitle, color, glow }) {
   }, [count]);
 
   return (
-    <div className={`relative bg-slate-900 border rounded-2xl p-4 flex flex-col gap-2 hover:border-opacity-70 transition-all shadow-lg group overflow-hidden ${glow}`}>
+    <div className={`relative bg-white dark:bg-slate-900 border rounded-2xl p-4 flex flex-col gap-2 hover:border-opacity-70 transition-all shadow-lg group overflow-hidden ${glow}`}>
       <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-5 group-hover:opacity-10 transition-opacity"
         style={{ backgroundColor: color }} />
       <div className="flex items-start justify-between">
@@ -92,9 +92,9 @@ function StatCard({ icon: Icon, count, label, subtitle, color, glow }) {
         <span className="text-[9px] font-mono text-slate-600 uppercase tracking-widest">LIVE</span>
       </div>
       <div>
-        <div className="text-2xl font-black text-white font-display leading-none">{val}</div>
-        <div className="text-xs font-extrabold text-white mt-0.5 leading-tight">{label}</div>
-        <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">{subtitle}</div>
+        <div className="text-2xl font-black text-slate-900 dark:text-white font-display leading-none">{val}</div>
+        <div className="text-xs font-extrabold text-slate-900 dark:text-white mt-0.5 leading-tight">{label}</div>
+        <div className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5 leading-tight">{subtitle}</div>
       </div>
     </div>
   );
@@ -107,17 +107,17 @@ function ResourceCard({ icon, label, current, max, color, unit = "units" }) {
   const pct = max > 0 ? Math.round((current / max) * 100) : 0;
   const isLow = pct < 30;
   return (
-    <div className="p-3 bg-slate-950/50 border border-slate-800 rounded-xl space-y-2">
+    <div className="p-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-base">{icon}</span>
-          <span className="text-[11px] font-bold text-slate-300">{label}</span>
+          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{label}</span>
         </div>
-        <span className={`text-xs font-black font-mono ${isLow ? "text-red-400 animate-pulse" : "text-slate-200"}`}>
+        <span className={`text-xs font-black font-mono ${isLow ? "text-red-400 animate-pulse" : "text-slate-800 dark:text-slate-200"}`}>
           {pct}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+      <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-1000 ease-out"
           style={{ width: animated ? `${pct}%` : "0%", backgroundColor: isLow ? "#ef4444" : color }} />
       </div>
@@ -271,18 +271,18 @@ export default function AdminView({
 
       {/* ── 8 STATS CARDS ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={Users}      count={totalUsers}       label="Total Users"         subtitle="Registered citizens"   color="#6366f1" glow="border-slate-800 hover:border-indigo-900" />
-        <StatCard icon={Activity}   count={incidents.length} label="Total Incidents"     subtitle="All reported events"   color="#f97316" glow="border-slate-800 hover:border-orange-900" />
-        <StatCard icon={CheckCircle}count={totalRescued}     label="People Rescued"      subtitle="Successfully evacuated" color="#10b981" glow="border-slate-800 hover:border-emerald-900" />
-        <StatCard icon={AlertTriangle} count={underCaution}  label="Under Caution"       subtitle="Being monitored"       color="#f59e0b" glow="border-slate-800 hover:border-amber-900" />
-        <StatCard icon={Truck}      count={activeRescueOps}  label="Active Rescue Ops"   subtitle="Teams deployed now"    color="#ef4444" glow="border-slate-800 hover:border-red-900" />
-        <StatCard icon={Home}       count={availableShelters}label="Available Shelters"  subtitle="Open relief camps"     color="#0ea5e9" glow="border-slate-800 hover:border-sky-900" />
-        <StatCard icon={Award}      count={activeVolunteers} label="Active Volunteers"   subtitle="Verified & deployed"   color="#a855f7" glow="border-slate-800 hover:border-purple-900" />
-        <StatCard icon={Bell}       count={sosToday}         label="SOS Today"           subtitle="Emergency signals"      color="#ec4899" glow="border-slate-800 hover:border-pink-900" />
+        <StatCard icon={Users}      count={totalUsers}       label="Total Users"         subtitle="Registered citizens"   color="#6366f1" glow="border-slate-200 dark:border-slate-800 hover:border-indigo-900" />
+        <StatCard icon={Activity}   count={incidents.length} label="Total Incidents"     subtitle="All reported events"   color="#f97316" glow="border-slate-200 dark:border-slate-800 hover:border-orange-900" />
+        <StatCard icon={CheckCircle}count={totalRescued}     label="People Rescued"      subtitle="Successfully evacuated" color="#10b981" glow="border-slate-200 dark:border-slate-800 hover:border-emerald-900" />
+        <StatCard icon={AlertTriangle} count={underCaution}  label="Under Caution"       subtitle="Being monitored"       color="#f59e0b" glow="border-slate-200 dark:border-slate-800 hover:border-amber-900" />
+        <StatCard icon={Truck}      count={activeRescueOps}  label="Active Rescue Ops"   subtitle="Teams deployed now"    color="#ef4444" glow="border-slate-200 dark:border-slate-800 hover:border-red-900" />
+        <StatCard icon={Home}       count={availableShelters}label="Available Shelters"  subtitle="Open relief camps"     color="#0ea5e9" glow="border-slate-200 dark:border-slate-800 hover:border-sky-900" />
+        <StatCard icon={Award}      count={activeVolunteers} label="Active Volunteers"   subtitle="Verified & deployed"   color="#a855f7" glow="border-slate-200 dark:border-slate-800 hover:border-purple-900" />
+        <StatCard icon={Bell}       count={sosToday}         label="SOS Today"           subtitle="Emergency signals"      color="#ec4899" glow="border-slate-200 dark:border-slate-800 hover:border-pink-900" />
       </div>
 
       {/* ── ADMIN TAB NAVIGATION ─────────────────────────────────── */}
-      <div className="flex gap-2 bg-slate-900 border border-slate-800 rounded-xl p-1 overflow-x-auto">
+      <div className="flex gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 overflow-x-auto">
         {[
           { id: "overview",  icon: TrendingUp,  label: "Overview" },
           { id: "sos",       icon: Bell,        label: `SOS Feed (${sosMessages.length})` },
@@ -292,8 +292,8 @@ export default function AdminView({
           <button key={tab.id} onClick={() => setActiveAdminTab(tab.id)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
               activeAdminTab === tab.id
-                ? "bg-indigo-600 text-white shadow"
-                : "text-slate-500 hover:text-slate-300"
+                ? "bg-indigo-600 text-slate-900 dark:text-white shadow"
+                : "text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:text-slate-300"
             }`}>
             <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
@@ -307,7 +307,7 @@ export default function AdminView({
           {/* Charts Row */}
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Pie 1 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
               <PieChart
                 data={populationPie}
                 size={160}
@@ -319,7 +319,7 @@ export default function AdminView({
             </div>
 
             {/* Pie 2 */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
               <PieChart
                 data={incidentPie}
                 size={160}
@@ -331,7 +331,7 @@ export default function AdminView({
             </div>
 
             {/* Bar Chart */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
               <BarChart
                 data={DISTRICT_REPORTS}
                 title="Reports by District"
@@ -342,7 +342,7 @@ export default function AdminView({
           </div>
 
           {/* Line Chart — full width */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
             <LineChart
               data={DAILY_REPORTS_7D}
               title="Daily Incident Reports — Last 7 Days"
@@ -357,17 +357,17 @@ export default function AdminView({
           <div className="grid lg:grid-cols-3 gap-6">
 
             {/* Weather Widget */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <CloudRain className="w-4 h-4 text-sky-400" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Weather</h3>
-                <span className="ml-auto text-[9px] text-slate-500 font-mono">IMD · Mock</span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Weather</h3>
+                <span className="ml-auto text-[9px] text-slate-500 dark:text-slate-500 font-mono">IMD · Mock</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-4xl">{WEATHER_DATA.icon}</span>
                 <div>
-                  <div className="text-2xl font-black text-white">{WEATHER_DATA.temp}</div>
-                  <div className="text-[10px] text-slate-400">Feels like {WEATHER_DATA.feels}</div>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">{WEATHER_DATA.temp}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">Feels like {WEATHER_DATA.feels}</div>
                   <div className="text-[10px] font-bold text-amber-400 animate-pulse">{WEATHER_DATA.condition}</div>
                 </div>
               </div>
@@ -375,10 +375,10 @@ export default function AdminView({
                 {[
                   { icon: CloudRain, label: "Rain Chance", val: WEATHER_DATA.rain, color: "text-sky-400" },
                   { icon: Droplets,  label: "Humidity",    val: WEATHER_DATA.humidity, color: "text-blue-400" },
-                  { icon: Wind,      label: "Wind",        val: WEATHER_DATA.wind, color: "text-slate-300" },
+                  { icon: Wind,      label: "Wind",        val: WEATHER_DATA.wind, color: "text-slate-700 dark:text-slate-300" },
                   { icon: Thermometer, label:"Feels Like", val: WEATHER_DATA.feels, color: "text-orange-400" },
                 ].map(row => (
-                  <div key={row.label} className="p-2 bg-slate-950/50 border border-slate-800 rounded-xl flex items-center gap-2">
+                  <div key={row.label} className="p-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center gap-2">
                     <row.icon className={`w-3.5 h-3.5 shrink-0 ${row.color}`} />
                     <div>
                       <div className="text-[9px] text-slate-600 uppercase tracking-wider">{row.label}</div>
@@ -390,10 +390,10 @@ export default function AdminView({
             </div>
 
             {/* Emergency Resources */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <Package className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Emergency Resources</h3>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Emergency Resources</h3>
               </div>
               <div className="space-y-2.5">
                 <ResourceCard icon="🍱" label="Food Kits"        current={avgFood}  max={100} color="#f59e0b" unit="%" />
@@ -404,24 +404,24 @@ export default function AdminView({
             </div>
 
             {/* Notifications */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-indigo-400" />
-                  <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Notifications</h3>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Notifications</h3>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">{visibleNotifications.length} unread</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-500">{visibleNotifications.length} unread</span>
               </div>
               <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                 {visibleNotifications.map(n => (
-                  <div key={n.id} className="flex items-start gap-2.5 p-2.5 bg-slate-950/50 border border-slate-800 rounded-xl group">
+                  <div key={n.id} className="flex items-start gap-2.5 p-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl group">
                     <span className="text-sm shrink-0 mt-0.5">{n.icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-[11px] leading-snug ${n.color} font-semibold`}>{n.text}</p>
                       <span className="text-[9px] text-slate-600 font-mono">{n.time}</span>
                     </div>
                     <button onClick={() => setNotifDismissed(d => [...d, n.id])}
-                      className="text-slate-700 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs">
+                      className="text-slate-700 hover:text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs">
                       ✕
                     </button>
                   </div>
@@ -437,11 +437,11 @@ export default function AdminView({
 
       {/* ── TAB: SOS COMMAND FEED ─────────────────────────────────── */}
       {activeAdminTab === "sos" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-red-500 animate-pulse" />
-              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Live SOS Command Feed</h3>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Live SOS Command Feed</h3>
             </div>
             <span className="text-[10px] font-mono bg-red-950 border border-red-900 text-red-400 px-2 py-0.5 rounded">
               {sosMessages.filter(m => m.status === "pending").length} Pending
@@ -449,7 +449,7 @@ export default function AdminView({
           </div>
 
           {sosMessages.length === 0 ? (
-            <div className="text-center py-10 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+            <div className="text-center py-10 text-xs text-slate-500 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
               No SOS signals in queue.
             </div>
           ) : (
@@ -466,41 +466,41 @@ export default function AdminView({
                 return (
                   <div key={sos.id} className={`p-4 border rounded-xl space-y-2.5 transition-colors ${
                     sos.status === "pending" ? "border-red-800/60 bg-red-950/20" :
-                    sos.status === "resolved" ? "border-slate-700 bg-slate-950/30" :
+                    sos.status === "resolved" ? "border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/30" :
                     "border-orange-800/60 bg-orange-950/20"
                   }`}>
                     <div className="flex justify-between items-start flex-wrap gap-2">
                       <div className="flex gap-1.5 flex-wrap">
                         <SeverityBadge severity={sos.severity} />
-                        <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-slate-800 bg-slate-900 text-slate-400">
+                        <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">
                           {disasterEmoji[sos.disasterType] || "⚠️"} {sos.disasterType}
                         </span>
                         <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${statusMap[sos.status]}`}>
                           {sos.status}
                         </span>
                       </div>
-                      <span className="text-[9px] font-mono text-slate-500">{timeSince}m ago</span>
+                      <span className="text-[9px] font-mono text-slate-500 dark:text-slate-500">{timeSince}m ago</span>
                     </div>
 
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-xs font-black text-white">{sos.citizenName}</h4>
-                        <p className="text-[10px] text-slate-400">{sos.address}</p>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white">{sos.citizenName}</h4>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{sos.address}</p>
                       </div>
                       <a href={`tel:${sos.phone}`} className="flex items-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 font-mono">
                         <Phone className="w-3 h-3" /> {sos.phone}
                       </a>
                     </div>
 
-                    <p className="text-[11px] text-slate-300 leading-relaxed">{sos.description}</p>
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">{sos.description}</p>
 
                     {sos.imageBase64 && (
-                      <div className="rounded-lg overflow-hidden border border-slate-800 max-h-[80px] flex bg-slate-900">
+                      <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[80px] flex bg-white dark:bg-slate-900">
                         <img src={sos.imageBase64} alt="SOS evidence" className="object-cover w-full h-[80px]" />
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-500 border-t border-slate-800/60 pt-2">
+                    <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-500 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800/60 pt-2">
                       <MapPin className="w-3 h-3" />
                       <span>{sos.lat?.toFixed(4)}, {sos.lng?.toFixed(4)}</span>
                       {sos.assignedResponderName && (
@@ -513,7 +513,7 @@ export default function AdminView({
                       <div className="flex gap-2 pt-1">
                         <a href={`https://www.google.com/maps/dir/?api=1&destination=${sos.lat},${sos.lng}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-lg cursor-pointer">
+                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold rounded-lg cursor-pointer">
                           🗺️ Map
                         </a>
                         {sos.status === "pending" && (
@@ -538,21 +538,21 @@ export default function AdminView({
 
       {/* ── TAB: RECENT ACTIVITY ─────────────────────────────────── */}
       {activeAdminTab === "activity" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
             <Clock className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Recent Activity Feed</h3>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Recent Activity Feed</h3>
           </div>
           <div className="space-y-3">
             {recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+              <div className="text-center py-8 text-xs text-slate-500 dark:text-slate-500 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
                 No recent activity.
               </div>
             ) : recentActivity.map((item, i) => {
               const timeSince = Math.floor((Date.now() - item.timestamp) / 60000);
-              const typeColor = { flood:"text-blue-400", fire:"text-red-400", medical:"text-emerald-400", earthquake:"text-amber-400", other:"text-slate-400" };
+              const typeColor = { flood:"text-blue-400", fire:"text-red-400", medical:"text-emerald-400", earthquake:"text-amber-400", other:"text-slate-500 dark:text-slate-400" };
               return (
-                <div key={item.id} className="flex items-start gap-3 p-3 bg-slate-950/40 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+                <div key={item.id} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:border-slate-700 transition-colors">
                   <div className="text-lg shrink-0 mt-0.5">
                     {{ flood:"🌊", fire:"🔥", earthquake:"🏚️", medical:"🩺", other:"⚠️" }[item.disasterType] || "⚠️"}
                   </div>
@@ -563,8 +563,8 @@ export default function AdminView({
                       </span>
                       <SeverityBadge severity={item.severity} />
                     </div>
-                    <p className="text-[11px] text-slate-300 leading-snug">{item.description}</p>
-                    <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono">
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">{item.description}</p>
+                    <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-500 font-mono">
                       <span className="flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {item.address || "Unknown Location"}</span>
                       <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {timeSince}m ago</span>
                       <span className={`font-bold uppercase ${
@@ -600,26 +600,26 @@ export default function AdminView({
             />
           </div>
           <div className="lg:col-span-4 space-y-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <Eye className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Incident Overview</h3>
-                <span className="ml-auto text-[10px] font-mono text-slate-500">{incidents.length} total</span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Incident Overview</h3>
+                <span className="ml-auto text-[10px] font-mono text-slate-500 dark:text-slate-500">{incidents.length} total</span>
               </div>
               <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
                 {incidents.length === 0 ? (
-                  <div className="text-center py-6 text-xs text-slate-500">No incidents reported.</div>
+                  <div className="text-center py-6 text-xs text-slate-500 dark:text-slate-500">No incidents reported.</div>
                 ) : incidents.map(inc => (
                   <div key={inc.id} className={`p-3 border rounded-xl text-xs ${
-                    inc.status === "resolved" ? "border-slate-800 bg-slate-950/20 opacity-60" :
+                    inc.status === "resolved" ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20 opacity-60" :
                     inc.severity === "high" ? "border-red-900/60 bg-red-950/20" :
-                    "border-slate-800 bg-slate-950/30"
+                    "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/30"
                   }`}>
                     <div className="flex justify-between items-start mb-1">
-                      <span className="font-black text-white uppercase text-[10px] truncate">{inc.title}</span>
+                      <span className="font-black text-slate-900 dark:text-white uppercase text-[10px] truncate">{inc.title}</span>
                       <SeverityBadge severity={inc.severity} />
                     </div>
-                    <p className="text-[10px] text-slate-400 leading-snug truncate">{inc.description}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug truncate">{inc.description}</p>
                     <div className="flex justify-between items-center mt-1.5 text-[9px] font-mono text-slate-600">
                       <span>📍 {inc.coords}</span>
                       <span className={inc.status === "resolved" ? "text-emerald-500" : "text-amber-400"}>
@@ -635,12 +635,12 @@ export default function AdminView({
       )}
 
       {/* ── CAMP SUPPLY TRACKER ───────────────────────────────────── */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <Database className="w-5 h-5 text-blue-400 animate-pulse" />
           <div>
-            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">{t.adminReliefCamps}</h3>
-            <p className="text-[10px] text-slate-500">Real-time resources & shelter allocation logs</p>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{t.adminReliefCamps}</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500">Real-time resources & shelter allocation logs</p>
           </div>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
@@ -650,37 +650,37 @@ export default function AdminView({
             const isFoodLow = camp.foodRations < 35;
             const isWaterLow = camp.waterSupply < 30;
             return (
-              <div key={camp.id} className="p-4 bg-slate-950/40 border border-slate-800 rounded-xl relative space-y-4 hover:border-slate-700 transition-colors">
+              <div key={camp.id} className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl relative space-y-4 hover:border-slate-300 dark:border-slate-700 transition-colors">
                 <div>
-                  <h4 className="text-xs font-bold text-white leading-tight truncate">{camp.name}</h4>
-                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mt-0.5">Camp #{camp.id}</span>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">{camp.name}</h4>
+                  <span className="text-[9px] font-mono text-slate-500 dark:text-slate-500 uppercase tracking-widest block mt-0.5">Camp #{camp.id}</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">{t.adminCampsBeds}:</span>
-                    <span className={`font-mono font-bold ${isBedsLow ? "text-red-500 animate-pulse" : "text-slate-300"}`}>{camp.bedsOccupied} / {camp.beds}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{t.adminCampsBeds}:</span>
+                    <span className={`font-mono font-bold ${isBedsLow ? "text-red-500 animate-pulse" : "text-slate-700 dark:text-slate-300"}`}>{camp.bedsOccupied} / {camp.beds}</span>
                   </div>
                   <input type="range" min="0" max={camp.beds} value={camp.bedsOccupied}
                     onChange={(e) => handleSupplyChange(camp.id, "bedsOccupied", e.target.value)}
-                    className="w-full accent-blue-600 cursor-pointer h-1 rounded bg-slate-800" />
+                    className="w-full accent-blue-600 cursor-pointer h-1 rounded bg-slate-100 dark:bg-slate-800" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Food Rations:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Food Rations:</span>
                     <span className={`font-mono font-bold ${isFoodLow ? "text-amber-500" : "text-emerald-400"}`}>{camp.foodRations}%</span>
                   </div>
                   <input type="range" min="0" max="100" value={camp.foodRations}
                     onChange={(e) => handleSupplyChange(camp.id, "foodRations", e.target.value)}
-                    className="w-full accent-amber-500 cursor-pointer h-1 rounded bg-slate-800" />
+                    className="w-full accent-amber-500 cursor-pointer h-1 rounded bg-slate-100 dark:bg-slate-800" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Water Storage:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Water Storage:</span>
                     <span className={`font-mono font-bold ${isWaterLow ? "text-red-500 animate-pulse" : "text-emerald-400"}`}>{camp.waterSupply}%</span>
                   </div>
                   <input type="range" min="0" max="100" value={camp.waterSupply}
                     onChange={(e) => handleSupplyChange(camp.id, "waterSupply", e.target.value)}
-                    className="w-full accent-emerald-500 cursor-pointer h-1 rounded bg-slate-800" />
+                    className="w-full accent-emerald-500 cursor-pointer h-1 rounded bg-slate-100 dark:bg-slate-800" />
                 </div>
                 {(isBedsLow || isFoodLow || isWaterLow) && (
                   <div className="p-2 bg-red-950/20 border border-red-950/50 rounded-lg text-[9px] text-red-400 leading-normal flex items-start gap-1">
@@ -701,38 +701,38 @@ export default function AdminView({
       {/* ── BROADCAST + VOLUNTEER VERIFY ─────────────────────────── */}
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
               <Radio className="w-5 h-5 text-red-500" />
               <div>
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">{t.adminBroadcastTitle}</h3>
-                <p className="text-[10px] text-slate-500">Target warnings instantly to citizen alert tickers</p>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{t.adminBroadcastTitle}</h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">Target warnings instantly to citizen alert tickers</p>
               </div>
             </div>
             <form onSubmit={handleBroadcastSend} className="space-y-3">
               <textarea value={newBroadcast} onChange={(e) => setNewBroadcast(e.target.value)}
                 placeholder={t.adminBroadcastPlaceholder} rows="3"
-                className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded-xl p-3 focus:outline-none focus:border-red-500 placeholder:text-slate-600 leading-normal" />
+                className="w-full bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl p-3 focus:outline-none focus:border-red-500 placeholder:text-slate-600 leading-normal" />
               {broadcastSuccess ? (
                 <div className="p-2 bg-emerald-950/40 border border-emerald-900/50 rounded-lg text-xs text-emerald-400 font-bold text-center">
                   Emergency alert broadcasted!
                 </div>
               ) : (
                 <button type="submit" disabled={!newBroadcast.trim()}
-                  className={`w-full py-2.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${!newBroadcast.trim() ? "opacity-50 cursor-not-allowed" : ""}`}>
+                  className={`w-full py-2.5 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${!newBroadcast.trim() ? "opacity-50 cursor-not-allowed" : ""}`}>
                   <Send className="w-3.5 h-3.5" /><span>{t.adminBroadcastSend}</span>
                 </button>
               )}
             </form>
-            <div className="pt-2 border-t border-slate-800/80">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider block mb-2">
                 Active Broadcasts ({broadcastAlerts.length})
               </span>
               <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                 {broadcastAlerts.map((alert, idx) => (
-                  <div key={idx} className="flex justify-between items-center bg-slate-950/50 p-2 border border-slate-800 rounded-lg text-[10px]">
+                  <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/50 p-2 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px]">
                     <span className="text-red-400 font-semibold truncate max-w-[360px]">{alert}</span>
-                    <button onClick={() => handleDeleteBroadcast(idx)} className="text-slate-500 hover:text-white p-1 hover:bg-slate-900 rounded cursor-pointer">
+                    <button onClick={() => handleDeleteBroadcast(idx)} className="text-slate-500 dark:text-slate-500 hover:text-slate-900 dark:text-white p-1 hover:bg-white dark:bg-slate-900 rounded cursor-pointer">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -746,24 +746,24 @@ export default function AdminView({
         </div>
 
         <div className="lg:col-span-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
               <UserCheck className="w-5 h-5 text-emerald-400" />
               <div>
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">{t.adminVerificationTitle}</h3>
-                <p className="text-[10px] text-slate-500">Verify volunteer credentials</p>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{t.adminVerificationTitle}</h3>
+                <p className="text-[10px] text-slate-500 dark:text-slate-500">Verify volunteer credentials</p>
               </div>
             </div>
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
               {volunteers.map((vol) => (
-                <div key={vol.id} className="p-3 bg-slate-950/30 border border-slate-800 rounded-xl flex items-center justify-between gap-3">
+                <div key={vol.id} className="p-3 bg-slate-50 dark:bg-slate-950/30 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-white truncate">{vol.name}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{vol.name}</span>
                       {vol.verified && <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                     </div>
-                    <span className="text-[9px] font-mono text-slate-500 uppercase block mt-0.5">ID: {vol.license}</span>
-                    <span className="text-[9px] text-slate-400 leading-normal block mt-1">{vol.roleDesc}</span>
+                    <span className="text-[9px] font-mono text-slate-500 dark:text-slate-500 uppercase block mt-0.5">ID: {vol.license}</span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 leading-normal block mt-1">{vol.roleDesc}</span>
                   </div>
                   {!vol.verified ? (
                     <button onClick={() => handleVerifyVolunteer(vol.id)}

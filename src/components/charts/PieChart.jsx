@@ -32,8 +32,8 @@ export default function PieChart({
     <div className="flex flex-col gap-3">
       {title && (
         <div>
-          <h4 className="text-xs font-extrabold text-white uppercase tracking-wider">{title}</h4>
-          {subtitle && <p className="text-[10px] text-slate-500 mt-0.5">{subtitle}</p>}
+          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">{title}</h4>
+          {subtitle && <p className="text-[10px] text-slate-500 dark:text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       )}
 
@@ -92,8 +92,8 @@ export default function PieChart({
           >
             {centerLabel && (
               <>
-                <span className="text-lg font-black text-white leading-none">{total}</span>
-                <span className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">{centerLabel}</span>
+                <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{total}</span>
+                <span className="text-[9px] text-slate-500 dark:text-slate-500 uppercase tracking-widest font-bold">{centerLabel}</span>
               </>
             )}
           </div>
@@ -111,13 +111,13 @@ export default function PieChart({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex justify-between items-center gap-1">
-                    <span className="text-[10px] text-slate-300 font-semibold truncate">{seg.label}</span>
+                    <span className="text-[10px] text-slate-700 dark:text-slate-300 font-semibold truncate">{seg.label}</span>
                     <span className="text-[10px] font-black font-mono shrink-0" style={{ color: seg.color }}>
                       {pct}%
                     </span>
                   </div>
                   {/* Mini progress bar */}
-                  <div className="h-0.5 rounded-full bg-slate-800 mt-0.5 overflow-hidden">
+                  <div className="h-0.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-0.5 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
@@ -128,7 +128,7 @@ export default function PieChart({
                     />
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 shrink-0">{seg.value}</span>
+                <span className="text-[10px] font-mono text-slate-500 dark:text-slate-500 shrink-0">{seg.value}</span>
               </div>
             );
           })}

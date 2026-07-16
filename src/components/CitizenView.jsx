@@ -32,24 +32,24 @@ function CitizenNotifications() {
   const visible = CITIZEN_NOTIFICATIONS.filter(n => !dismissed.includes(n.id));
   if (visible.length === 0) return null;
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Notifications</h3>
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Notifications</h3>
         </div>
-        <span className="text-[10px] font-mono text-slate-500">{visible.length} new</span>
+        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-500">{visible.length} new</span>
       </div>
       <div className="space-y-2">
         {visible.map(n => (
-          <div key={n.id} className="flex items-start gap-2.5 p-2.5 bg-slate-950/50 border border-slate-800 rounded-xl group">
+          <div key={n.id} className="flex items-start gap-2.5 p-2.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl group">
             <span className="text-sm shrink-0 mt-0.5">{n.icon}</span>
             <div className="flex-1 min-w-0">
               <p className={`text-[11px] leading-snug font-semibold ${n.color}`}>{n.text}</p>
               <span className="text-[9px] text-slate-600 font-mono">{n.time}</span>
             </div>
             <button onClick={() => setDismissed(d => [...d, n.id])}
-              className="text-slate-700 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs shrink-0">
+              className="text-slate-700 hover:text-slate-500 dark:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs shrink-0">
               ✕
             </button>
           </div>
@@ -354,14 +354,14 @@ export default function CitizenView({
         <div className="lg:col-span-4 space-y-6">
           
           {/* Main Distress SOS Signal trigger */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center text-center shadow-lg">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col items-center text-center shadow-lg">
             
             {/* Visual background details */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/5 rounded-bl-full pointer-events-none"></div>
 
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-800 w-full justify-center">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200 dark:border-slate-800 w-full justify-center">
               <ShieldAlert className="w-5 h-5 text-red-500 animate-pulse" />
-              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                 {t.sosTitle}
               </h3>
             </div>
@@ -399,7 +399,7 @@ export default function CitizenView({
                   onMouseLeave={handlePressEnd}
                   onTouchStart={handlePressStart}
                   onTouchEnd={handlePressEnd}
-                  className={`absolute top-5 left-5 w-38 h-38 rounded-full border-4 border-red-700/80 bg-gradient-to-br from-red-600 to-red-950 flex flex-col items-center justify-center text-white transition-all cursor-pointer select-none active:scale-95 ${
+                  className={`absolute top-5 left-5 w-38 h-38 rounded-full border-4 border-red-700/80 bg-gradient-to-br from-red-600 to-red-950 flex flex-col items-center justify-center text-slate-900 dark:text-white transition-all cursor-pointer select-none active:scale-95 ${
                     isPressing ? "brightness-125" : "sos-pulse-ring"
                   } touch-target`}
                 >
@@ -414,7 +414,7 @@ export default function CitizenView({
             {/* Cancelable Countdown Screen */}
             {countdown !== null && (
               <div className="my-8 flex flex-col items-center py-6">
-                <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest">
+                <span className="text-[10px] text-slate-500 dark:text-slate-500 font-extrabold uppercase tracking-widest">
                   {t.sosCountdown}
                 </span>
                 <span className="text-6xl font-black text-red-500 font-display my-2 animate-ping">
@@ -422,7 +422,7 @@ export default function CitizenView({
                 </span>
                 <button
                   onClick={cancelSOSCountdown}
-                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer touch-target"
+                  className="px-6 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-xs rounded-xl shadow transition-all cursor-pointer touch-target"
                 >
                   {t.sosCancel}
                 </button>
@@ -457,23 +457,23 @@ export default function CitizenView({
                       const labels = { pending: "⏳ Pending", acknowledged: "✅ Acknowledged", dispatched: "🚒 Responder En-Route", resolved: "🟢 Rescued / Resolved" };
                       return (
                         <div key={step} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-bold transition-all ${
-                          isCurrent ? colors[step] + " animate-pulse" : isDone ? "text-slate-300 border-slate-700 bg-slate-900" : "text-slate-600 border-slate-850 bg-transparent"
+                          isCurrent ? colors[step] + " animate-pulse" : isDone ? "text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900" : "text-slate-600 border-slate-850 bg-transparent"
                         }`}>
                           <span className={`w-2 h-2 rounded-full shrink-0 ${isDone ? "bg-current" : "bg-slate-700"}`} />
                           {labels[step]}
                           {step === "dispatched" && myActiveSOS.assignedResponderName && (
-                            <span className="ml-auto font-mono text-[9px] text-slate-400">{myActiveSOS.assignedResponderName}</span>
+                            <span className="ml-auto font-mono text-[9px] text-slate-500 dark:text-slate-400">{myActiveSOS.assignedResponderName}</span>
                           )}
                         </div>
                       );
                     })}
 
-                    <div className="text-[9px] text-slate-500 font-mono text-center">
+                    <div className="text-[9px] text-slate-500 dark:text-slate-500 font-mono text-center">
                       GPS: {activeSOS.coords} · Type: {myActiveSOS.disasterType?.toUpperCase()}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-slate-300 leading-normal max-w-[220px] text-center">
+                  <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-normal max-w-[220px] text-center">
                     {activeSOS.status === "dispatched" 
                       ? "RESCUE SQUAD dispatched! Moving to your coordinates."
                       : t.sosDispatching}
@@ -489,22 +489,22 @@ export default function CitizenView({
               </div>
             )}
 
-            <p className="text-xs text-slate-400 leading-normal">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
               {activeSOS ? t.sosStatusActive : countdown !== null ? "Awaiting confirm..." : t.sosSubtitle}
             </p>
           </div>
 
           {/* Family Safety check-in group */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
             
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
               <Heart className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                 {t.familyTitle}
               </h3>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {t.familySubtitle}
             </p>
 
@@ -528,8 +528,8 @@ export default function CitizenView({
             </div>
 
             {/* Family List Panel */}
-            <div className="space-y-2 pt-2 border-t border-slate-800/80">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider block mb-2">
                 {t.familyGroupTitle}
               </span>
               
@@ -537,7 +537,7 @@ export default function CitizenView({
                 {familyMembers.map((member) => (
                   <div
                     key={member.id}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border bg-slate-950/20 text-xs ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border bg-slate-50 dark:bg-slate-950/20 text-xs ${
                       member.status === "safe" 
                         ? "border-emerald-900/40 hover:border-emerald-800" 
                         : "border-red-900/40 hover:border-red-800"
@@ -546,8 +546,8 @@ export default function CitizenView({
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${member.status === "safe" ? "bg-emerald-400" : "bg-red-500 animate-ping"}`}></div>
                       <div>
-                        <span className="font-bold text-slate-100">{member.name}</span>
-                        <span className="text-[10px] text-slate-500 ml-1.5">({member.relation})</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100">{member.name}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-500 ml-1.5">({member.relation})</span>
                       </div>
                     </div>
                     
@@ -557,7 +557,7 @@ export default function CitizenView({
                       }`}>
                         {member.status === "safe" ? t.familyStatusSafe : t.familyStatusDanger}
                       </span>
-                      <span className="text-[9px] text-slate-500 block font-mono">{t.familyLastLocation}: {member.time}</span>
+                      <span className="text-[9px] text-slate-500 dark:text-slate-500 block font-mono">{t.familyLastLocation}: {member.time}</span>
                     </div>
                   </div>
                 ))}
@@ -566,16 +566,16 @@ export default function CitizenView({
           </div>
 
           {/* Local Volunteer & Resource Circle (20 Mock Persons Listing) */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
             
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Compass className="w-5 h-5 text-blue-400 animate-spin-slow" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                   {language === "hi" ? "निकटतम स्वयंसेवक" : "Nearby Volunteers"}
                 </h3>
               </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-950 border border-slate-850 text-slate-400">
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-50 dark:bg-slate-950 border border-slate-850 text-slate-500 dark:text-slate-400">
                 {nearbyVolunteers.length} Active
               </span>
             </div>
@@ -592,12 +592,12 @@ export default function CitizenView({
                   </span>
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                  <h4 className="text-xs font-black text-white uppercase tracking-wide">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
                     {nearestVolunteer.name}
                   </h4>
                   <a 
                     href={`tel:${nearestVolunteer.phone}`}
-                    className="flex items-center gap-1 text-[10px] text-emerald-450 hover:text-emerald-400 font-bold bg-slate-950 border border-slate-855 px-2.5 py-1 rounded-lg"
+                    className="flex items-center gap-1 text-[10px] text-emerald-450 hover:text-emerald-400 font-bold bg-slate-50 dark:bg-slate-950 border border-slate-855 px-2.5 py-1 rounded-lg"
                   >
                     <Phone className="w-3 h-3" />
                     <span>Call</span>
@@ -605,11 +605,11 @@ export default function CitizenView({
                 </div>
                 <div className="text-[10px] text-slate-405 leading-normal space-y-1 mt-1 border-t border-slate-850 pt-2">
                   <div>
-                    <span className="text-slate-500 font-semibold block uppercase text-[8px] tracking-widest">Capabilities:</span>
-                    <span className="text-slate-300 font-bold">{nearestVolunteer.service}</span>
+                    <span className="text-slate-500 dark:text-slate-500 font-semibold block uppercase text-[8px] tracking-widest">Capabilities:</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-bold">{nearestVolunteer.service}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 font-semibold block uppercase text-[8px] tracking-widest">Supplies Offered:</span>
+                    <span className="text-slate-500 dark:text-slate-500 font-semibold block uppercase text-[8px] tracking-widest">Supplies Offered:</span>
                     <span className="text-slate-350">{nearestVolunteer.supplies}</span>
                   </div>
                 </div>
@@ -628,30 +628,30 @@ export default function CitizenView({
 
             {/* Scrollable list of other volunteers */}
             <div className="space-y-2 pt-1.5 max-h-[220px] overflow-y-auto pr-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider block mb-2">
                 Emergency Support Circle List
               </span>
 
               {sortedVolunteers.slice(1).map((vol) => (
                 <div 
                   key={vol.id}
-                  className="p-2.5 bg-slate-955/40 border border-slate-850 rounded-xl flex items-center justify-between text-xs hover:border-slate-800 transition-colors"
+                  className="p-2.5 bg-slate-955/40 border border-slate-850 rounded-xl flex items-center justify-between text-xs hover:border-slate-200 dark:border-slate-800 transition-colors"
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-slate-200">{vol.name}</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-850 text-slate-400 font-bold">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">{vol.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-white dark:bg-slate-900 border border-slate-850 text-slate-500 dark:text-slate-400 font-bold">
                         {vol.distance.toFixed(1)} km
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-tight">
-                      Service: <strong className="text-slate-400 font-medium">{vol.service}</strong>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-500 leading-tight">
+                      Service: <strong className="text-slate-500 dark:text-slate-400 font-medium">{vol.service}</strong>
                     </p>
                   </div>
 
                   <a 
                     href={`tel:${vol.phone}`} 
-                    className="p-2 bg-slate-900 border border-slate-850 hover:bg-slate-800 text-slate-300 rounded-lg"
+                    className="p-2 bg-white dark:bg-slate-900 border border-slate-850 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg"
                     title={`Call ${vol.name}`}
                   >
                     <Phone className="w-3.5 h-3.5" />
@@ -688,11 +688,11 @@ export default function CitizenView({
           <div className="grid md:grid-cols-2 gap-6">
             
             {/* Incident Reporting Form */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col justify-between">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-800 mb-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800 mb-4">
                   <Send className="w-4 h-4 text-red-500" />
-                  <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                     {t.reportTitle}
                   </h3>
                 </div>
@@ -707,13 +707,13 @@ export default function CitizenView({
                 <form onSubmit={handleSubmitReport} className="space-y-4">
                   {/* Category / Disaster Type */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                       {t.reportCategory}
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
+                      className="w-full bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-red-500 cursor-pointer touch-target"
                     >
                       <option value="flood">{t.reportCatFlood}</option>
                       <option value="fire">{t.reportCatFire}</option>
@@ -725,17 +725,17 @@ export default function CitizenView({
 
                   {/* Severity Picker */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Severity Level</label>
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Severity Level</label>
                     <div className="grid grid-cols-4 gap-1.5">
                       {["critical","high","medium","low"].map(sev => (
                         <button key={sev} type="button" onClick={() => setSosSeverity(sev)}
                           className={`py-1.5 text-[9px] font-extrabold uppercase rounded-lg border transition-all cursor-pointer ${
                             sosSeverity === sev
-                              ? sev === "critical" ? "bg-red-700 border-red-600 text-white" 
-                                : sev === "high" ? "bg-orange-700 border-orange-600 text-white"
-                                : sev === "medium" ? "bg-amber-700 border-amber-600 text-white"
-                                : "bg-slate-700 border-slate-600 text-white"
-                              : "bg-transparent border-slate-800 text-slate-500 hover:text-slate-400"
+                              ? sev === "critical" ? "bg-red-700 border-red-600 text-slate-900 dark:text-white" 
+                                : sev === "high" ? "bg-orange-700 border-orange-600 text-slate-900 dark:text-white"
+                                : sev === "medium" ? "bg-amber-700 border-amber-600 text-slate-900 dark:text-white"
+                                : "bg-slate-700 border-slate-600 text-slate-900 dark:text-white"
+                              : "bg-transparent border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-500 hover:text-slate-500 dark:text-slate-400"
                           }`}>{sev}</button>
                       ))}
                     </div>
@@ -743,19 +743,19 @@ export default function CitizenView({
 
                   {/* Address */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Your Location / Address</label>
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Your Location / Address</label>
                     <input
                       type="text"
                       value={sosAddress}
                       onChange={e => setSosAddress(e.target.value)}
                       placeholder="e.g. Block C, Sector 7, near school"
-                      className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-red-500 placeholder:text-slate-600"
+                      className="w-full bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-red-500 placeholder:text-slate-600"
                     />
                   </div>
 
                   {/* Description */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                       {t.reportDescription}
                     </label>
                     <textarea
@@ -763,13 +763,13 @@ export default function CitizenView({
                       onChange={(e) => setDescription(e.target.value)}
                       rows="3"
                       placeholder={t.reportPlaceholder}
-                      className="w-full bg-slate-950 text-xs text-white border border-slate-800 rounded-xl p-3 focus:outline-none focus:border-red-500 placeholder:text-slate-600 leading-normal"
+                      className="w-full bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl p-3 focus:outline-none focus:border-red-500 placeholder:text-slate-600 leading-normal"
                     ></textarea>
                   </div>
 
                   {/* Real Photo Upload */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                       {t.reportPhoto}
                     </label>
                     <input
@@ -784,8 +784,8 @@ export default function CitizenView({
                       onClick={() => document.getElementById("real-image-upload").click()}
                       className={`w-full py-2.5 border rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 touch-target ${
                         photoBase64 
-                          ? "bg-slate-800 border-red-500/50 text-red-400" 
-                          : "bg-slate-950/50 border-slate-800 text-slate-400 hover:text-white"
+                          ? "bg-slate-100 dark:bg-slate-800 border-red-500/50 text-red-400" 
+                          : "bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white"
                       }`}
                     >
                       <Image className="w-4 h-4" />
@@ -798,7 +798,7 @@ export default function CitizenView({
 
                     {/* Base64 Live Preview image */}
                     {photoBase64 && (
-                      <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-800 max-h-[140px] flex justify-center bg-slate-950">
+                      <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 max-h-[140px] flex justify-center bg-slate-50 dark:bg-slate-950">
                         <img 
                           src={photoBase64} 
                           alt="Evidence preview" 
@@ -821,7 +821,7 @@ export default function CitizenView({
               </div>
 
               {/* Submitting Buttons */}
-              <div className="pt-4 border-t border-slate-800/80 mt-4 flex items-center justify-between gap-4">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80 mt-4 flex items-center justify-between gap-4">
                 {formSuccess ? (
                   <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-950/40 p-2 rounded-lg border border-emerald-900/50 w-full justify-center">
                     <Check className="w-4 h-4" />
@@ -831,7 +831,7 @@ export default function CitizenView({
                   <button
                     onClick={handleSubmitReport}
                     disabled={!description.trim()}
-                    className={`w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer touch-target active:scale-95 ${
+                    className={`w-full py-3 bg-red-600 hover:bg-red-500 text-slate-900 dark:text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer touch-target active:scale-95 ${
                       !description.trim() ? "opacity-45 cursor-not-allowed" : ""
                     }`}
                   >
@@ -851,12 +851,12 @@ export default function CitizenView({
           </div>
 
           {/* Survival guidelines & Helpline numbers */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
             
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Info className="w-5 h-5 text-red-500" />
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                   {t.guideTitle}
                 </h3>
               </div>
@@ -867,57 +867,57 @@ export default function CitizenView({
 
             {/* Survival Guide Cards Grid */}
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:border-slate-700 transition-colors">
                 <h4 className="text-xs font-bold text-blue-400 mb-1.5 flex items-center gap-1.5">
                   <Droplets className="w-3.5 h-3.5" />
                   <span>{t.guideFloodTitle}</span>
                 </h4>
-                <p className="text-[11px] text-slate-400 leading-normal">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
                   {t.guideFloodDesc}
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:border-slate-700 transition-colors">
                 <h4 className="text-xs font-bold text-red-400 mb-1.5 flex items-center gap-1.5">
                   <ShieldAlert className="w-3.5 h-3.5" />
                   <span>{t.guideFireTitle}</span>
                 </h4>
-                <p className="text-[11px] text-slate-400 leading-normal">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
                   {t.guideFireDesc}
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-950/40 border border-slate-800 rounded-xl hover:border-slate-700 transition-colors">
+              <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl hover:border-slate-300 dark:border-slate-700 transition-colors">
                 <h4 className="text-xs font-bold text-amber-500 mb-1.5 flex items-center gap-1.5">
                   <Compass className="w-3.5 h-3.5" />
                   <span>{t.guideEarthquakeTitle}</span>
                 </h4>
-                <p className="text-[11px] text-slate-400 leading-normal">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
                   {t.guideEarthquakeDesc}
                 </p>
               </div>
             </div>
 
             {/* Emergency Hotline numbers */}
-            <div className="bg-slate-950 border border-slate-800/80 p-4 rounded-xl">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
+            <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 p-4 rounded-xl">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider block mb-2">
                 {t.guideContactsTitle}
               </span>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-bold">
-                <a href="tel:1078" className="p-2 bg-slate-900 border border-slate-800 hover:border-red-500 rounded-lg flex items-center gap-2 text-red-400 touch-target transition-all">
+                <a href="tel:1078" className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-red-500 rounded-lg flex items-center gap-2 text-red-400 touch-target transition-all">
                   <Phone className="w-3.5 h-3.5" />
                   <span>NDMA: 1078</span>
                 </a>
-                <a href="tel:102" className="p-2 bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-lg flex items-center gap-2 text-emerald-400 touch-target transition-all">
+                <a href="tel:102" className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 rounded-lg flex items-center gap-2 text-emerald-400 touch-target transition-all">
                   <Phone className="w-3.5 h-3.5" />
                   <span>Ambulance: 102</span>
                 </a>
-                <a href="tel:101" className="p-2 bg-slate-900 border border-slate-800 hover:border-amber-500 rounded-lg flex items-center gap-2 text-amber-550 touch-target transition-all">
+                <a href="tel:101" className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500 rounded-lg flex items-center gap-2 text-amber-550 touch-target transition-all">
                   <Phone className="w-3.5 h-3.5" />
                   <span>Fire: 101</span>
                 </a>
-                <a href="tel:112" className="p-2 bg-slate-900 border border-slate-800 hover:border-blue-500 rounded-lg flex items-center gap-2 text-blue-400 touch-target transition-all">
+                <a href="tel:112" className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 rounded-lg flex items-center gap-2 text-blue-400 touch-target transition-all">
                   <Phone className="w-3.5 h-3.5" />
                   <span>Police: 112</span>
                 </a>
@@ -927,35 +927,35 @@ export default function CitizenView({
         </div>
 
       {/* ── NEARBY SERVICES ─────────────────────────────────────────────── */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
           <MapPin className="w-5 h-5 text-indigo-400" />
           <div>
-            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">Nearby Services</h3>
-            <p className="text-[10px] text-slate-500">Quick access to hospitals, police, shelters & relief camps</p>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">Nearby Services</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-500">Quick access to hospitals, police, shelters & relief camps</p>
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {NEARBY_SERVICES.map(svc => (
-            <div key={svc.id} className={`p-3 bg-slate-950/50 border rounded-xl space-y-2 transition-colors ${svc.color}`}>
+            <div key={svc.id} className={`p-3 bg-slate-50 dark:bg-slate-950/50 border rounded-xl space-y-2 transition-colors ${svc.color}`}>
               <div className="flex items-start justify-between">
                 <span className="text-2xl">{svc.icon}</span>
-                <span className="text-[9px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 uppercase">{svc.dist}</span>
+                <span className="text-[9px] font-mono text-slate-500 dark:text-slate-500 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 uppercase">{svc.dist}</span>
               </div>
               <div>
-                <div className="text-xs font-black text-white leading-tight">{svc.name}</div>
-                <div className="text-[9px] text-slate-500 uppercase tracking-wider mt-0.5">{svc.type}</div>
-                <div className="text-[10px] text-slate-400 mt-1 leading-snug">{svc.address}</div>
+                <div className="text-xs font-black text-slate-900 dark:text-white leading-tight">{svc.name}</div>
+                <div className="text-[9px] text-slate-500 dark:text-slate-500 uppercase tracking-wider mt-0.5">{svc.type}</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">{svc.address}</div>
               </div>
               <div className="flex gap-1.5 pt-1">
                 <a href={`tel:${svc.phone}`}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold transition-colors">
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold transition-colors">
                   <Phone className="w-3 h-3" /> Call
                 </a>
                 <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(svc.name + ' ' + svc.address)}`}
                   target="_blank" rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg text-[10px] font-bold transition-colors">
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-indigo-400 rounded-lg text-[10px] font-bold transition-colors">
                   <MapPin className="w-3 h-3" /> Map
                 </a>
               </div>
