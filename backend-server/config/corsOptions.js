@@ -10,9 +10,8 @@ const { ALLOWED_ORIGIN } = require("./env");
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow server-to-server requests (no origin) and the whitelisted frontend
-    const whitelist = [ALLOWED_ORIGIN];
-    if (!origin || whitelist.includes(origin)) {
+    // Allow server-to-server requests and mobile Capacitor origins
+    if (!origin || ALLOWED_ORIGIN === "*" || whitelist.includes(origin) || origin.startsWith("http://localhost") || origin.startsWith("capacitor://")) {
       callback(null, true);
     } else {
       callback(new Error(`CORS: Origin '${origin}' is not allowed.`));

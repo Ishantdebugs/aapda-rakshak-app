@@ -14,7 +14,4 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGIN
         value: "*"
-    disk:
-      name: sqlite-data
-      mountPath: /opt/render/project/src/backend-server
-      sizeGB: 1
+

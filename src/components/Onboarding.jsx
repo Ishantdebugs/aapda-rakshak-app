@@ -118,7 +118,10 @@ export default function Onboarding({ language, setLanguage, setRole, setUserProf
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Bypass-Tunnel-Reminder": "true" 
+        },
         body: JSON.stringify(payload)
       });
 
