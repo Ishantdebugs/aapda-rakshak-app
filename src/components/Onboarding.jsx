@@ -157,39 +157,39 @@ export default function Onboarding({ language, setLanguage, setRole, setUserProf
       <div className="absolute top-10 left-10 w-96 h-96 bg-red-900/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-900/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
 
-      <div className="max-w-4xl w-full bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
+      <div className="max-w-4xl w-full bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 p-5 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden transition-all duration-300">
         
         {/* Top bar with Language Switcher */}
-        <div className="flex justify-between items-center mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-red-600/10 rounded-xl border border-red-500/20">
-              <ShieldAlert className="w-8 h-8 text-red-500 animate-pulse" />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 md:gap-0 mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="p-2 md:p-2.5 bg-red-600/10 rounded-xl border border-red-500/20 shrink-0">
+              <ShieldAlert className="w-6 h-6 md:w-8 md:h-8 text-red-500 animate-pulse" />
             </div>
-            <div>
-              <h1 className="text-3xl font-extrabold font-display tracking-wide uppercase text-slate-900 dark:text-white">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-3xl font-extrabold font-display tracking-wide uppercase text-slate-900 dark:text-white leading-tight">
                 {t.onboardingTitle}
               </h1>
-              <p className="text-xs text-red-500 font-semibold tracking-widest uppercase">
+              <p className="text-[9px] md:text-xs text-red-500 font-semibold tracking-widest uppercase mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                 {language === "hi" ? "आपदा प्रबंधन प्रणाली" : "DISASTER EMERGENCY PORTAL"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-3 w-full md:w-auto">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-sm"
+              className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer shadow-sm shrink-0"
               title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <Languages className="w-4 h-4 text-slate-500 dark:text-slate-400 ml-2" />
+            <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-950/80 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shrink-0">
+              <Languages className="w-4 h-4 text-slate-500 dark:text-slate-400 ml-1.5 hidden sm:block" />
               <button
                 onClick={() => setLanguage("en")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all touch-target ${
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold transition-all touch-target ${
                   language === "en"
                     ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-md border border-slate-300 dark:border-slate-700"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -199,7 +199,7 @@ export default function Onboarding({ language, setLanguage, setRole, setUserProf
               </button>
               <button
                 onClick={() => setLanguage("hi")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all touch-target ${
+                className={`px-2.5 md:px-3 py-1.5 rounded-lg text-xs font-bold transition-all touch-target ${
                   language === "hi"
                     ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-md border border-slate-300 dark:border-slate-700"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"

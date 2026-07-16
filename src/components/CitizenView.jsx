@@ -399,7 +399,7 @@ export default function CitizenView({
                   onMouseLeave={handlePressEnd}
                   onTouchStart={handlePressStart}
                   onTouchEnd={handlePressEnd}
-                  className={`absolute top-5 left-5 w-38 h-38 rounded-full border-4 border-red-700/80 bg-gradient-to-br from-red-600 to-red-950 flex flex-col items-center justify-center text-slate-900 dark:text-white transition-all cursor-pointer select-none active:scale-95 ${
+                  className={`absolute top-5 left-5 w-36 h-36 rounded-full border-4 border-red-700/80 bg-gradient-to-br from-red-600 to-red-950 flex flex-col items-center justify-center text-slate-900 dark:text-white transition-all cursor-pointer select-none active:scale-95 ${
                     isPressing ? "brightness-125" : "sos-pulse-ring"
                   } touch-target`}
                 >

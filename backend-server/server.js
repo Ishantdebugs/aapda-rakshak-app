@@ -30,7 +30,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const app = express();
 
 // ── Security Headers ──────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 
 // ── HTTP Request Logger ───────────────────────────────────────────────────────
 app.use(morgan(config.NODE_ENV === "production" ? "combined" : "dev"));
@@ -62,6 +62,17 @@ app.get("/health", (_req, res) => {
 app.use("/api/auth",      authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+// ── Serve Frontend Web App ────────────────────────────────────────────────────
+const path = require("path");
+const distPath = path.join(__dirname, "../dist");
+app.use(express.static(distPath));
+
+// Fallback all non-API GET routes to the React index.html
+app.get("*", (req, res, next) => {
+  if (req.originalUrl.startsWith("/api")) return next();
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
 // ── 404 — Unknown Route ───────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({
@@ -76,7 +87,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // ── Start Server ──────────────────────────────────────────────────────────────
-const server = app.listen(config.PORT, () => {
+const server = app.listen(config.PORT, "0.0.0.0", () => {
   console.log("═══════════════════════════════════════════════════════");
   console.log(`  🚨 Aapda Rakshak Backend — ${config.NODE_ENV.toUpperCase()} MODE`);
   console.log(`  🌐 Listening on     : http://localhost:${config.PORT}`);

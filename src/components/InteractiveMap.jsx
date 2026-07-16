@@ -821,8 +821,8 @@ export default function InteractiveMap({
           >
             {/* SVG Tactical Vector Viewport */}
             <svg
-              width={mapWidth}
-              height={mapHeight}
+              width="100%"
+              height="100%"
               viewBox={`0 0 ${mapWidth} ${mapHeight}`}
               className="transition-transform duration-100 ease-out select-none"
               style={{
