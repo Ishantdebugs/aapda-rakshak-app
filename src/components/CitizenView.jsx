@@ -925,6 +925,7 @@ export default function CitizenView({
             </div>
           </div>
         </div>
+      </div>
 
       {/* ── NEARBY SERVICES ─────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
@@ -967,7 +968,6 @@ export default function CitizenView({
       {/* ── CITIZEN NOTIFICATIONS ──────────────────────────────────────────── */}
       <CitizenNotifications />
 
-      </div>
     </div>
   );
 }
