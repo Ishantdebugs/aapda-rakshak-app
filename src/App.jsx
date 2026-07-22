@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import CitizenView from "./components/CitizenView";
 import ResponderView from "./components/ResponderView";
 import AdminView from "./components/AdminView";
+import { fetchWithAuth } from "./utils/api";
 
 export default function App() {
   // Global States
@@ -433,6 +434,31 @@ export default function App() {
 
   // Authenticated user profile (Gmail verification)
   const [userProfile, setUserProfile] = useState(null);
+
+  // Fetch live backend data when online and authenticated
+  useEffect(() => {
+    if (offline || !onboardingComplete) return;
+
+    const fetchDashboardData = async () => {
+      try {
+        const incidentsRes = await fetchWithAuth("/api/dashboard/incidents");
+        if (incidentsRes.success && incidentsRes.data) setIncidents(incidentsRes.data);
+
+        const campsRes = await fetchWithAuth("/api/dashboard/camps");
+        if (campsRes.success && campsRes.data) setCamps(campsRes.data);
+
+        const respondersRes = await fetchWithAuth("/api/dashboard/responders");
+        if (respondersRes.success && respondersRes.data) setResponders(respondersRes.data);
+
+        const sosRes = await fetchWithAuth("/api/dashboard/sos");
+        if (sosRes.success && sosRes.data) setSosMessages(sosRes.data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+
+    fetchDashboardData();
+  }, [offline, onboardingComplete]);
 
   // Render Onboarding flow if not complete
   if (!onboardingComplete) {

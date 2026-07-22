@@ -20,5 +20,6 @@ router.post("/login", login);
 
 // Protected — must send valid Bearer token
 router.get("/verify", authMiddleware, verify);
+router.get("/profile", authMiddleware, verify); // Alias for verify
 
 module.exports = router;

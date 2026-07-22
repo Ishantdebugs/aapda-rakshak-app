@@ -18,6 +18,8 @@ const INCIDENTS = [
     description: "Waterlogging exceeds 1.5 meters. Two vehicles stuck.",
     severity: "high",
     status: "pending",
+    x: 320,
+    y: 190,
     lat: 28.6145,
     lng: 77.2081,
     coords: "28.6145, 77.2081",
@@ -31,6 +33,8 @@ const INCIDENTS = [
     description: "Transformer fire spreading rapidly to adjacent shops.",
     severity: "high",
     status: "in-progress",
+    x: 580,
+    y: 280,
     lat: 28.619,
     lng: 77.2155,
     coords: "28.6190, 77.2155",
@@ -44,6 +48,8 @@ const INCIDENTS = [
     description: "Elderly resident requires medical transport.",
     severity: "medium",
     status: "pending",
+    x: 480,
+    y: 120,
     lat: 28.6095,
     lng: 77.2201,
     coords: "28.6095, 77.2201",
@@ -53,15 +59,15 @@ const INCIDENTS = [
 ];
 
 const RESPONDERS = [
-  { id: "resp-001", name: "Unit 4 Rescue Team", status: "available", type: "Ambulance Crew", lat: 28.611, lng: 77.2012 },
-  { id: "resp-002", name: "Volunteer Squad Bravo", status: "busy", type: "Boat Evacuation", lat: 28.625, lng: 77.2245 },
-  { id: "resp-003", name: "Rescue Team Echo", status: "available", type: "Search & Rescue", lat: 28.6015, lng: 77.234 },
+  { id: "resp-self", name: "Unit 4 Rescue Team (You)", status: "available", type: "Ambulance Crew", x: 200, y: 320, lat: 28.611, lng: 77.2012, coords: "28.6110, 77.2012" },
+  { id: "resp-002", name: "Volunteer Squad Bravo", status: "busy", type: "Boat Evacuation", x: 500, y: 100, lat: 28.625, lng: 77.2245, coords: "28.6250, 77.2245" },
+  { id: "resp-003", name: "Rescue Team Echo", status: "available", type: "Search & Rescue", x: 680, y: 240, lat: 28.6015, lng: 77.234, coords: "28.6015, 77.2340" },
 ];
 
 const CAMPS = [
-  { id: 1, name: "Central Sports Stadium Relief Base", beds: 250, bedsOccupied: 180, foodRations: 65, waterSupply: 78, lat: 28.612, lng: 77.21 },
-  { id: 2, name: "North Hill High-School Safe Camp", beds: 120, bedsOccupied: 110, foodRations: 24, waterSupply: 28, lat: 28.628, lng: 77.195 },
-  { id: 3, name: "Metro Hub Sheltered Safe Haven", beds: 150, bedsOccupied: 45, foodRations: 92, waterSupply: 88, lat: 28.602, lng: 77.215 },
+  { id: 1, name: "Central Sports Stadium Relief Base", beds: 250, bedsOccupied: 180, foodRations: 65, waterSupply: 78, x: 300, y: 180, lat: 28.612, lng: 77.21 },
+  { id: 2, name: "North Hill High-School Safe Camp", beds: 120, bedsOccupied: 110, foodRations: 24, waterSupply: 28, x: 620, y: 90, lat: 28.628, lng: 77.195 },
+  { id: 3, name: "Metro Hub Sheltered Safe Haven", beds: 150, bedsOccupied: 45, foodRations: 92, waterSupply: 88, x: 450, y: 350, lat: 28.602, lng: 77.215 },
 ];
 
 const SOS_MESSAGES = [
@@ -188,10 +194,10 @@ const getSosQueue = (req, res) => {
   const { role, id } = req.user;
   let result = [...SOS_MESSAGES];
 
-  // Citizens can only see their own SOS reports
-  if (role === "citizen") {
-    result = result.filter((s) => s.citizenId === id);
-  }
+  // Citizens can only see their own SOS reports (disabled for demo to allow visibility)
+  // if (role === "citizen") {
+  //   result = result.filter((s) => s.citizenId === id);
+  // }
 
   res.json({
     success: true,
