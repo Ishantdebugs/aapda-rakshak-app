@@ -266,18 +266,20 @@ export default function CitizenView({
       return;
     }
 
-    // Online submission: update global app database
-    const mapX = 200 + Math.random() * 400;
-    const mapY = 150 + Math.random() * 200;
-    const lat = 28.61 + (Math.random() - 0.5) * 0.05;
-    const lng = 77.20 + (Math.random() - 0.5) * 0.05;
+    // Online submission: update global app database with real GPS position
+    const lat = userLocation?.lat || 31.1048;
+    const lng = userLocation?.lng || 77.1734;
+    const mapX = 350;
+    const mapY = 200;
+
+    const locationName = sosAddress.trim() || (userLocation ? `GPS Lock (${lat.toFixed(4)}, ${lng.toFixed(4)})` : "Shimla, HP");
 
     const newIncident = {
       id: incidents.length + 1,
       category,
-      title: `${category.toUpperCase()} - Reported near Block ${String.fromCharCode(65 + Math.floor(Math.random() * 8))}`,
+      title: `${category.toUpperCase()} Emergency - ${locationName}`,
       description,
-      severity: "medium",
+      severity: sosSeverity || "medium",
       status: "pending",
       x: mapX,
       y: mapY,
@@ -297,11 +299,11 @@ export default function CitizenView({
 
   // Triggered by AI Damage Assessor callback
   const handleAITriageResult = (assessment) => {
-    // Add AI triage report to global incidents
-    const mapX = 350 + Math.random() * 250;
-    const mapY = 180 + Math.random() * 150;
-    const lat = 28.61 + (Math.random() - 0.5) * 0.05;
-    const lng = 77.20 + (Math.random() - 0.5) * 0.05;
+    // Add AI triage report using live GPS coordinates
+    const lat = userLocation?.lat || 31.1048;
+    const lng = userLocation?.lng || 77.1734;
+    const mapX = 380;
+    const mapY = 220;
 
     const aiIncident = {
       id: incidents.length + 1,

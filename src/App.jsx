@@ -84,13 +84,13 @@ export default function App() {
   });
 
   useEffect(() => {
-    const center = userLocation || { lat: 28.6139, lng: 77.2090 };
+    const center = userLocation || { lat: 31.1048, lng: 77.1734 };
     
     const names = [
-      "Arjun Mehta", "Sunita Rao", "Karan Johar", "Deepak Gupta", "Neha Verma",
-      "Pooja Patel", "Rohan Joshi", "Sanjay Kumar", "Preeti Singh", "Vijay Yadav",
-      "Anjali Sharma", "Manish Mishra", "Aarav Gill", "Aditi Nair", "Ravi Prasad",
-      "Kavita Reddy", "Vikram Sen", "Ritu Roy", "Amit Saxena", "Jyoti Choudhary"
+      "Arjun Sharma", "Sunita Thakur", "Karan Katoch", "Deepak Bhardwaj", "Neha Verma",
+      "Pooja Chandel", "Rohan Joshi", "Sanjay Parmar", "Preeti Singh", "Vijay Rana",
+      "Anjali Sharma", "Manish Kanwar", "Aarav Gill", "Aditi Pathania", "Ravi Prashar",
+      "Kavita Himachal", "Vikram Sen", "Ritu Roy", "Amit Dogra", "Jyoti Chohan"
     ];
 
     const capabilities = [
@@ -104,17 +104,17 @@ export default function App() {
     ];
 
     const generated = names.map((name, i) => {
-      const offsetLat = (Math.random() - 0.5) * 0.035;
-      const offsetLng = (Math.random() - 0.5) * 0.035;
+      const offsetLat = ((i % 5) - 2) * 0.008;
+      const offsetLng = (Math.floor(i / 5) - 2) * 0.008;
       const lat = center.lat + offsetLat;
       const lng = center.lng + offsetLng;
       
       const cap = capabilities[i % capabilities.length];
       
       return {
-        id: `vol-mock-${i + 1}`,
+        id: `vol-hp-${i + 1}`,
         name,
-        phone: `+91 98${Math.floor(10 + Math.random() * 89)}9 ${Math.floor(100 + Math.random() * 899)} ${Math.floor(100 + Math.random() * 899)}`,
+        phone: `+91 98160 ${10000 + i * 432}`,
         lat,
         lng,
         coords: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
