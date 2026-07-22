@@ -58,6 +58,23 @@ export default function InteractiveMap({
   // Map Mode State (dark, satellite, terrain)
   const [mapMode, setMapMode] = useState("dark");
 
+  // Himachal Pradesh IMD Weather & District state
+  const HP_DISTRICTS = [
+    { name: "Shimla (HQ)", lat: 31.1048, lng: 77.1734, alert: "orange", desc: "IMD Orange Alert: Heavy Rain & Landslide Prone" },
+    { name: "Kangra (Dharamshala)", lat: 32.2190, lng: 76.3234, alert: "red", desc: "IMD Red Alert: Flash Flood Warning" },
+    { name: "Kullu (Manali)", lat: 32.2432, lng: 77.1892, alert: "orange", desc: "IMD Orange Alert: Cloudburst Risk" },
+    { name: "Mandi", lat: 31.7087, lng: 76.9320, alert: "yellow", desc: "IMD Yellow Watch: Thunderstorms" },
+    { name: "Solan", lat: 30.9045, lng: 77.0967, alert: "yellow", desc: "IMD Yellow Watch: Moderate Rainfall" },
+    { name: "Chamba", lat: 32.5534, lng: 76.1258, alert: "orange", desc: "IMD Orange Alert: Landslide Hazard" },
+    { name: "Kinnaur", lat: 31.5373, lng: 78.2710, alert: "yellow", desc: "IMD Yellow Watch: High Altitude Rockfalls" },
+    { name: "Lahaul & Spiti", lat: 32.5710, lng: 77.1740, alert: "green", desc: "IMD Green: Weather Normal" },
+    { name: "Una", lat: 31.4685, lng: 76.2708, alert: "green", desc: "IMD Green: Clear Weather" },
+    { name: "Bilaspur", lat: 31.3302, lng: 76.7562, alert: "yellow", desc: "IMD Yellow Watch: Isolated Heavy Spells" },
+    { name: "Hamirpur", lat: 31.6862, lng: 76.5213, alert: "green", desc: "IMD Green: Weather Normal" },
+    { name: "Sirmaur (Nahan)", lat: 30.5599, lng: 77.2955, alert: "yellow", desc: "IMD Yellow Watch: Thunderstorms" },
+  ];
+  const [selectedHpDistrict, setSelectedHpDistrict] = useState(HP_DISTRICTS[0]);
+
   // Road routing coordinates state
   const [roadRouteCoordinates, setRoadRouteCoordinates] = useState([]);
 
@@ -121,9 +138,9 @@ export default function InteractiveMap({
     const fetchWeather = async () => {
       setWeatherLoading(true);
       try {
-        // Use user location if available, otherwise default to map center or Delhi
-        let lat = 28.6139;
-        let lng = 77.2090;
+        // Default to selected Himachal Pradesh district, or user position / map center
+        let lat = selectedHpDistrict.lat;
+        let lng = selectedHpDistrict.lng;
         
         if (userLocation) {
           lat = userLocation.lat;
@@ -146,7 +163,7 @@ export default function InteractiveMap({
     };
 
     fetchWeather();
-  }, [showWeather, userLocation]);
+  }, [showWeather, userLocation, selectedHpDistrict]);
 
   // Safe zones registry
   const safeZones = [
@@ -172,7 +189,7 @@ export default function InteractiveMap({
     }
     if (mapInstanceRef.current) return; // already initialized
 
-    const initialCenter = userLocation || { lat: 28.6139, lng: 77.2090 };
+    const initialCenter = userLocation || { lat: 31.1048, lng: 77.1734 };
     mapInstanceRef.current = window.L.map(mapRef.current, {
       zoomControl: false,
       attributionControl: false
@@ -725,16 +742,57 @@ export default function InteractiveMap({
               </div>
             </div>
 
-            {/* Weather Overlay Portal */}
+            {/* Weather & IMD Early Warning Overlay Portal */}
             {showWeather && (
               <div className="absolute top-16 left-4 z-10 animate-fadeIn">
-                <div className="bg-slate-50 dark:bg-slate-950/90 backdrop-blur-md border border-blue-900/50 rounded-xl shadow-2xl transition-all overflow-hidden p-3 w-[180px]">
-                  <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800/80 pb-2 mb-2">
-                    <CloudRain className="w-3.5 h-3.5 text-blue-400" />
-                    <span className="text-[10px] font-extrabold text-blue-100 uppercase tracking-wider font-display">
-                      {language === "hi" ? "लाइव मौसम" : "Live Weather"}
+                <div className="bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-900/50 rounded-xl shadow-2xl transition-all overflow-hidden p-3 w-[220px]">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800/80 pb-2 mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <CloudRain className="w-3.5 h-3.5 text-blue-400" />
+                      <span className="text-[10px] font-extrabold text-blue-900 dark:text-blue-100 uppercase tracking-wider font-display">
+                        IMD HP Weather Hub
+                      </span>
+                    </div>
+                    <span className="text-[8px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30">
+                      IMD Shimla
                     </span>
                   </div>
+
+                  {/* HP District Selector */}
+                  <div className="mb-2">
+                    <label className="text-[9px] text-slate-500 dark:text-slate-400 font-bold block mb-1">
+                      {language === "hi" ? "हिमाचल जिला चुनें:" : "Select HP District:"}
+                    </label>
+                    <select
+                      value={selectedHpDistrict.name}
+                      onChange={(e) => {
+                        const found = HP_DISTRICTS.find(d => d.name === e.target.value);
+                        if (found) {
+                          setSelectedHpDistrict(found);
+                          if (mapInstanceRef.current) {
+                            mapInstanceRef.current.panTo([found.lat, found.lng]);
+                            mapInstanceRef.current.setZoom(12);
+                          }
+                        }
+                      }}
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-[10px] text-slate-900 dark:text-white rounded px-2 py-1 font-bold focus:outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      {HP_DISTRICTS.map(d => (
+                        <option key={d.name} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* IMD Alert Badge */}
+                  <div className={`p-1.5 rounded-lg border mb-2.5 text-[9px] font-bold ${
+                    selectedHpDistrict.alert === "red" ? "bg-red-950/80 border-red-600 text-red-300 animate-pulse" :
+                    selectedHpDistrict.alert === "orange" ? "bg-orange-950/80 border-orange-600 text-orange-300" :
+                    selectedHpDistrict.alert === "yellow" ? "bg-amber-950/80 border-amber-600 text-amber-300" :
+                    "bg-emerald-950/80 border-emerald-600 text-emerald-300"
+                  }`}>
+                    {selectedHpDistrict.desc}
+                  </div>
+
                   {weatherLoading ? (
                     <div className="flex justify-center p-3">
                       <div className="w-4 h-4 border-2 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
