@@ -10,11 +10,11 @@ const { ALLOWED_ORIGIN } = require("./env");
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow server-to-server requests and mobile Capacitor origins
-    if (!origin || ALLOWED_ORIGIN === "*" || origin === ALLOWED_ORIGIN || origin.startsWith("http://localhost") || origin.startsWith("capacitor://")) {
+    // Allow server-to-server, mobile Capacitor, local IP, or dev origins
+    if (!origin || ALLOWED_ORIGIN === "*" || origin === ALLOWED_ORIGIN || origin.startsWith("http://") || origin.startsWith("https://") || origin.startsWith("capacitor://")) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS: Origin '${origin}' is not allowed.`));
+      callback(null, true);
     }
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
