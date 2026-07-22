@@ -8,22 +8,24 @@ import {
 } from "lucide-react";
 
 // ── Nearby Services mock data (Firebase-ready) ────────────────────────────────
+// ── Nearby Services mock data (Firebase-ready) ────────────────────────────────
 const NEARBY_SERVICES = [
-  { id: 1, type: "Hospital",        name: "AIIMS Emergency",          address: "Ansari Nagar, New Delhi",   phone: "011-26588500", dist: "1.2 km", icon: "🏥", color: "border-emerald-800 hover:border-emerald-600" },
-  { id: 2, type: "Hospital",        name: "Safdarjung Hospital",      address: "Ring Road, New Delhi",       phone: "011-26707444", dist: "2.8 km", icon: "🏥", color: "border-emerald-800 hover:border-emerald-600" },
-  { id: 3, type: "Police Station",  name: "Hauz Khas Police Stn",     address: "Sri Aurobindo Marg, Delhi",   phone: "011-24601411", dist: "0.9 km", icon: "🚔", color: "border-blue-800 hover:border-blue-600" },
-  { id: 4, type: "Police Station",  name: "Vasant Kunj Police Stn",   address: "Vasant Kunj, New Delhi",      phone: "011-26131001", dist: "3.1 km", icon: "🚔", color: "border-blue-800 hover:border-blue-600" },
-  { id: 5, type: "Fire Station",    name: "Sector 14 Fire Station",   address: "Gurugram, Haryana",           phone: "0124-2327111", dist: "4.5 km", icon: "🔥", color: "border-orange-800 hover:border-orange-600" },
-  { id: 6, type: "Relief Camp",     name: "Community Hall Sector 14", address: "Gurugram, Haryana",           phone: "1800-180-4441", dist: "2.2 km", icon: "⛺", color: "border-amber-800 hover:border-amber-600" },
-  { id: 7, type: "Safe Shelter",    name: "Kendriya Vidyalaya Camp",  address: "R.K. Puram, New Delhi",      phone: "011-26172030", dist: "5.0 km", icon: "🏕️", color: "border-purple-800 hover:border-purple-600" },
-  { id: 8, type: "Relief Camp",     name: "NDRF Base Camp",           address: "Vasant Vihar, Delhi",        phone: "011-24363260", dist: "6.3 km", icon: "⛺", color: "border-amber-800 hover:border-amber-600" },
+  { id: 1, type: "Hospital",        name: "IGMC Emergency (Shimla)",  address: "Lakkar Bazar, Shimla, HP",     phone: "0177-2804251", dist: "1.2 km", icon: "🏥", color: "border-emerald-800 hover:border-emerald-600" },
+  { id: 2, type: "Hospital",        name: "RPGMC Tanda (Kangra)",     address: "Tanda, Kangra, HP",            phone: "01892-267115", dist: "3.5 km", icon: "🏥", color: "border-emerald-800 hover:border-emerald-600" },
+  { id: 3, type: "Police Station",  name: "Shimla City Police Stn",   address: "Mall Road, Shimla, HP",        phone: "0177-2652123", dist: "0.8 km", icon: "🚔", color: "border-blue-800 hover:border-blue-600" },
+  { id: 4, type: "Police Station",  name: "Dharamshala Police Stn",   address: "Court Road, Dharamshala, HP",  phone: "01892-222210", dist: "2.1 km", icon: "🚔", color: "border-blue-800 hover:border-blue-600" },
+  { id: 5, type: "Fire Station",    name: "Mall Road Fire Station",   address: "Shimla, Himachal Pradesh",     phone: "0177-2652101", dist: "1.5 km", icon: "🔥", color: "border-orange-800 hover:border-orange-600" },
+  { id: 6, type: "Relief Camp",     name: "Ridge Maidan Relief Hub",  address: "The Ridge, Shimla, HP",        phone: "0177-2658900", dist: "1.0 km", icon: "⛺", color: "border-amber-800 hover:border-amber-600" },
+  { id: 7, type: "Safe Shelter",    name: "Dhalpur Safe Shelter",     address: "Dhalpur, Kullu, HP",           phone: "01902-222227", dist: "4.2 km", icon: "🏕️", color: "border-purple-800 hover:border-purple-600" },
+  { id: 8, type: "Relief Camp",     name: "SDRF Mandi Base Camp",     address: "Near Bus Stand, Mandi, HP",    phone: "01905-222102", dist: "5.0 km", icon: "⛺", color: "border-amber-800 hover:border-amber-600" },
 ];
 
 const CITIZEN_NOTIFICATIONS = [
-  { id: 1, icon: "✅", text: "Your SOS has been acknowledged by Responder Ramesh Kumar", time: "5m ago",  color: "text-emerald-400" },
-  { id: 2, icon: "🏕️", text: "Relief Camp opened at Community Hall Sector 14 — 120 beds available", time: "20m ago", color: "text-blue-400" },
-  { id: 3, icon: "⛈️", text: "IMD Alert: Heavy rain expected. Avoid low-lying areas tonight", time: "1h ago",  color: "text-amber-400" },
-  { id: 4, icon: "🚑", text: "Rescue team dispatched to your area. ETA 15 minutes", time: "2h ago",  color: "text-red-400" },
+  { id: 1, icon: "⛈️", text: "IMD Shimla Alert: Heavy Rainfall & Flash Flood warning for Kangra, Mandi & Kullu districts.", time: "10m ago", color: "text-amber-400" },
+  { id: 2, icon: "🏔️", text: "Landslide Advisory: NH-5 (Shimla-Kinnaur Highway) blocked near Jeori. SDRF Himachal deployed.", time: "25m ago", color: "text-red-400" },
+  { id: 3, icon: "✅", text: "Your SOS beacon has been acknowledged by SDRF Himachal Response Unit 4 (Shimla).", time: "35m ago", color: "text-emerald-400" },
+  { id: 4, icon: "⛺", text: "Emergency Relief Camp active at Ridge Maidan, Shimla — 180 beds & rations available.", time: "1h ago", color: "text-blue-400" },
+  { id: 5, icon: "🌊", text: "River Level Alert: Beas River water rising near Pandoh Dam (Mandi). Stay clear of riverbanks.", time: "2h ago", color: "text-amber-400" },
 ];
 
 // Inline Citizen Notifications Component
