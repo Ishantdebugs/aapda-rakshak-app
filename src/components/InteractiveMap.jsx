@@ -151,10 +151,22 @@ export default function InteractiveMap({
           lng = center.lng;
         }
 
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum&timezone=auto&forecast_days=5`);
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,uv_index_max&timezone=auto&forecast_days=5`);
         if (!res.ok) throw new Error("Failed to fetch weather");
         const data = await res.json();
-        setWeatherData({ current: data.current, daily: data.daily });
+
+        // Live USGS Seismic / Earthquake API fetch for Himachal & surrounding region
+        let earthquakeCount = 0;
+        try {
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const eqRes = await fetch(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=${sevenDaysAgo}&minmagnitude=2.5&latitude=${lat}&longitude=${lng}&maxradiuskm=500`);
+          if (eqRes.ok) {
+            const eqData = await eqRes.json();
+            earthquakeCount = eqData.features ? eqData.features.length : 0;
+          }
+        } catch {}
+
+        setWeatherData({ current: data.current, daily: data.daily, earthquakeCount });
       } catch (err) {
         console.error("Weather fetch error:", err);
       } finally {
@@ -799,10 +811,10 @@ export default function InteractiveMap({
                     </div>
                   ) : weatherData ? (
                     <div className="space-y-3">
-                      <div className="space-y-2 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                      <div className="space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5"><Thermometer className="w-3 h-3 text-red-400" /> Temp:</span>
-                          <span className="font-bold text-slate-900 dark:text-white text-sm">{weatherData.current.temperature_2m}°C</span>
+                          <span className="font-bold text-slate-900 dark:text-white text-xs">{weatherData.current.temperature_2m}°C ({weatherData.current.apparent_temperature}°C)</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-slate-900/50 p-1 rounded">
                           <span className="flex items-center gap-1.5"><Wind className="w-3 h-3 text-emerald-400" /> Wind:</span>
@@ -811,6 +823,18 @@ export default function InteractiveMap({
                         <div className="flex justify-between items-center">
                           <span className="flex items-center gap-1.5"><Droplets className="w-3 h-3 text-blue-400" /> Precip:</span>
                           <span className="font-bold text-blue-200">{weatherData.current.precipitation} mm</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white dark:bg-slate-900/50 p-1 rounded">
+                          <span className="flex items-center gap-1.5">💧 Humidity:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{weatherData.current.relative_humidity_2m}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="flex items-center gap-1.5">⏲️ Pressure:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{weatherData.current.surface_pressure} hPa</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-amber-950/40 p-1 rounded border border-amber-900/50 text-[9px]">
+                          <span className="flex items-center gap-1">🌋 Seismic Risk:</span>
+                          <span className="font-bold text-amber-400">{weatherData.earthquakeCount} M2.5+ (7d)</span>
                         </div>
                       </div>
 
