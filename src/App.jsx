@@ -435,7 +435,7 @@ export default function App() {
   // Authenticated user profile (Gmail verification)
   const [userProfile, setUserProfile] = useState(null);
 
-  // Fetch live backend data when online and authenticated
+  // Fetch live backend data when online and authenticated (with 8s live background polling)
   useEffect(() => {
     if (offline || !onboardingComplete) return;
 
@@ -458,6 +458,8 @@ export default function App() {
     };
 
     fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 8000);
+    return () => clearInterval(interval);
   }, [offline, onboardingComplete]);
 
   // Render Onboarding flow if not complete

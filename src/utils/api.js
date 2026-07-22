@@ -5,10 +5,11 @@ import { API_BASE_URL } from "../config";
  * Automatically attaches the JWT token from localStorage.
  */
 export async function fetchWithAuth(endpoint, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") || localStorage.getItem("ar_auth_token");
   
   const headers = {
     "Content-Type": "application/json",
+    "Bypass-Tunnel-Reminder": "true",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
